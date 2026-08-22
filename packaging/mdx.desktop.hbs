@@ -1,0 +1,21 @@
+{{!
+  Desktop entry template for the .deb bundle.
+
+  Tauri's built-in template emits a bare `Exec=mdx` with no MimeType, which
+  means a file manager cannot hand a Markdown file to the app. The MIME list
+  is written out literally rather than through a variable so it cannot come
+  out empty.
+}}
+[Desktop Entry]
+Type=Application
+Name={{name}}
+GenericName=Markdown Viewer
+Comment={{comment}}
+Exec={{exec}} %f
+Icon={{icon}}
+Terminal=false
+Categories={{categories}}
+MimeType=text/markdown;text/x-markdown;text/plain;
+Keywords=markdown;md;viewer;documentation;
+StartupNotify=true
+StartupWMClass={{exec}}

@@ -1,0 +1,162 @@
+/*
+ * Palettes.
+ *
+ * Every colour in the app resolves through one of these tokens, so a new
+ * theme is a block of custom properties and nothing else. `auto` follows the
+ * desktop setting; the explicit themes win over it in both directions.
+ */
+
+:root {
+  --bg: #ffffff;
+  --bg-elev: #f6f8fa;
+  --bg-sunken: #f0f3f6;
+  --fg: #1f2328;
+  --fg-muted: #59636e;
+  --fg-faint: #818b98;
+  --border: #d1d9e0;
+  --border-soft: #e4e8ec;
+  --accent: #0969da;
+  --accent-fg: #ffffff;
+  --accent-soft: rgba(9, 105, 218, 0.1);
+  --code-bg: #f6f8fa;
+  --code-fg: #1f2328;
+  --mark-bg: #fff8c5;
+  --mark-fg: #1f2328;
+  --find-bg: #ffd97d;
+  --find-current-bg: #ff9f43;
+  --shadow: 0 8px 24px rgba(31, 35, 40, 0.16);
+  --selection: rgba(9, 105, 218, 0.22);
+
+  --alert-note: #0969da;
+  --alert-tip: #1a7f37;
+  --alert-important: #8250df;
+  --alert-warning: #9a6700;
+  --alert-danger: #cf222e;
+  --alert-question: #0891b2;
+  --alert-example: #6e7781;
+  --alert-quote: #6e7781;
+
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, "Noto Sans", sans-serif;
+  --font-serif: "Source Serif 4", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", ui-monospace, "SFMono-Regular",
+    "Liberation Mono", monospace;
+  --font-scale: 1;
+}
+
+/* `auto` defers to the desktop, but only while no explicit theme is chosen. */
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="auto"] {
+    --bg: #0d1117;
+    --bg-elev: #151b23;
+    --bg-sunken: #010409;
+    --fg: #e6edf3;
+    --fg-muted: #9198a1;
+    --fg-faint: #6e7681;
+    --border: #3d444d;
+    --border-soft: #272c33;
+    --accent: #4493f8;
+    --accent-fg: #06090f;
+    --accent-soft: rgba(68, 147, 248, 0.15);
+    --code-bg: #151b23;
+    --code-fg: #e6edf3;
+    --mark-bg: rgba(187, 128, 9, 0.35);
+    --mark-fg: #e6edf3;
+    --find-bg: #9a6700;
+    --find-current-bg: #d29922;
+    --shadow: 0 8px 24px rgba(1, 4, 9, 0.6);
+    --selection: rgba(68, 147, 248, 0.3);
+
+    --alert-note: #4493f8;
+    --alert-tip: #3fb950;
+    --alert-important: #ab7df8;
+    --alert-warning: #d29922;
+    --alert-danger: #f85149;
+    --alert-question: #22d3ee;
+    --alert-example: #8b949e;
+    --alert-quote: #8b949e;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0d1117;
+  --bg-elev: #151b23;
+  --bg-sunken: #010409;
+  --fg: #e6edf3;
+  --fg-muted: #9198a1;
+  --fg-faint: #6e7681;
+  --border: #3d444d;
+  --border-soft: #272c33;
+  --accent: #4493f8;
+  --accent-fg: #06090f;
+  --accent-soft: rgba(68, 147, 248, 0.15);
+  --code-bg: #151b23;
+  --code-fg: #e6edf3;
+  --mark-bg: rgba(187, 128, 9, 0.35);
+  --mark-fg: #e6edf3;
+  --find-bg: #9a6700;
+  --find-current-bg: #d29922;
+  --shadow: 0 8px 24px rgba(1, 4, 9, 0.6);
+  --selection: rgba(68, 147, 248, 0.3);
+
+  --alert-note: #4493f8;
+  --alert-tip: #3fb950;
+  --alert-important: #ab7df8;
+  --alert-warning: #d29922;
+  --alert-danger: #f85149;
+  --alert-question: #22d3ee;
+  --alert-example: #8b949e;
+  --alert-quote: #8b949e;
+}
+
+:root[data-theme="sepia"] {
+  --bg: #f4ecd8;
+  --bg-elev: #ece0c6;
+  --bg-sunken: #e6d8ba;
+  --fg: #3b332a;
+  --fg-muted: #6b5f4d;
+  --fg-faint: #8a7c66;
+  --border: #d8c8a6;
+  --border-soft: #e3d6ba;
+  --accent: #9a5b1e;
+  --accent-fg: #fffaf0;
+  --accent-soft: rgba(154, 91, 30, 0.12);
+  --code-bg: #ece0c6;
+  --code-fg: #3b332a;
+  --mark-bg: #e8d38a;
+  --mark-fg: #3b332a;
+  --find-bg: #e0b95a;
+  --find-current-bg: #d18f2a;
+  --shadow: 0 8px 24px rgba(59, 51, 42, 0.18);
+  --selection: rgba(154, 91, 30, 0.24);
+}
+
+:root[data-theme="high-contrast"] {
+  --bg: #000000;
+  --bg-elev: #0a0a0a;
+  --bg-sunken: #000000;
+  --fg: #ffffff;
+  --fg-muted: #d0d0d0;
+  --fg-faint: #a0a0a0;
+  --border: #8b8b8b;
+  --border-soft: #5a5a5a;
+  --accent: #79c0ff;
+  --accent-fg: #000000;
+  --accent-soft: rgba(121, 192, 255, 0.2);
+  --code-bg: #0a0a0a;
+  --code-fg: #ffffff;
+  --mark-bg: #ffe066;
+  --mark-fg: #000000;
+  --find-bg: #ffe066;
+  --find-current-bg: #ffa94d;
+  --shadow: 0 0 0 1px #8b8b8b;
+  --selection: rgba(121, 192, 255, 0.35);
+
+  --alert-note: #79c0ff;
+  --alert-tip: #56d364;
+  --alert-important: #d2a8ff;
+  --alert-warning: #e3b341;
+  --alert-danger: #ff7b72;
+  --alert-question: #56d4dd;
+  --alert-example: #c9d1d9;
+  --alert-quote: #c9d1d9;
+}

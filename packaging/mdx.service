@@ -1,0 +1,28 @@
+# Keep a warm MDX process from login.
+#
+# The first launch of any webview app pays several hundred milliseconds to
+# start WebKit. Running one hidden instance at login moves that cost off the
+# critical path: `mdx notes.md` then hands the file to the process that is
+# already up, and the document appears immediately.
+#
+#   mkdir -p ~/.config/systemd/user
+#   cp packaging/mdx.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now mdx.service
+
+[Unit]
+Description=MDX Markdown viewer (resident instance)
+Documentation=https://github.com/Ravilesx/MDX
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/mdx --hidden
+Restart=on-failure
+RestartSec=5
+# The viewer is idle most of the time; keep it out of the way of real work.
+Nice=5
+
+[Install]
+WantedBy=graphical-session.target

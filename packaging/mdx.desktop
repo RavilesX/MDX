@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=MDX
+GenericName=Markdown Viewer
+Comment=A fast Markdown viewer
+Exec=mdx %f
+Icon=mdx
+Terminal=false
+Categories=Utility;Viewer;Office;
+MimeType=text/markdown;text/x-markdown;text/plain;
+Keywords=markdown;md;viewer;documentation;
+StartupNotify=true
+StartupWMClass=MDX
