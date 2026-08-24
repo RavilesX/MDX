@@ -16,6 +16,7 @@ export interface Settings {
   sidebarOpen: boolean;
   showFrontMatter: boolean;
   justify: boolean;
+  allowRemoteImages: boolean;
 }
 
 export interface RecentFile {
@@ -36,6 +37,7 @@ export const DEFAULT_SETTINGS: Settings = {
   sidebarOpen: false,
   showFrontMatter: true,
   justify: false,
+  allowRemoteImages: true,
 };
 
 export const THEMES: Theme[] = ["auto", "light", "dark", "sepia", "high-contrast"];

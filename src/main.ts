@@ -239,6 +239,12 @@ const menu = new Menu(el.menu, need("btn-menu"), (): MenuItem[] => {
       run: () => updateSettings({ showFrontMatter: !settings.showFrontMatter }),
     },
     {
+      kind: "toggle",
+      label: "Load remote images",
+      checked: settings.allowRemoteImages,
+      run: () => updateSettings({ allowRemoteImages: !settings.allowRemoteImages }),
+    },
+    {
       kind: "action",
       label: "Reset appearance",
       run: () =>

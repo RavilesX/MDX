@@ -48,8 +48,10 @@ document is readable before it is finished.
 
 **Sanitised HTML.** Markdown from elsewhere can carry `<script>` or
 `<img onerror=…>`. Everything passes through DOMPurify before it reaches the
-DOM, remote images are refused, and the webview CSP blocks script execution as
-a second layer. A viewer should never run code that arrives in a document.
+DOM, and the webview CSP blocks script execution as a second layer. A viewer
+should never run code that arrives in a document. Remote images (badges, CDN
+assets) load over https by default — a toggle in the menu turns that off to
+stop a document from making third-party requests just by being opened.
 
 ## Building
 

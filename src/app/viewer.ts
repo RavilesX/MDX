@@ -62,8 +62,10 @@ export class Viewer {
   }
 
   updateSettings(settings: Settings): void {
+    const remoteImagesChanged = settings.allowRemoteImages !== this.settings.allowRemoteImages;
     this.settings = settings;
     if (this.current) this.applyFrontMatterVisibility();
+    if (this.current && remoteImagesChanged) void this.reload();
   }
 
   async open(path: string, options: { keepScroll?: boolean } = {}): Promise<void> {
@@ -252,8 +254,9 @@ export class Viewer {
       const src = media.getAttribute("src");
       if (!src || src.startsWith("data:") || src.startsWith("blob:")) continue;
       if (EXTERNAL_SCHEME.test(src) && !src.startsWith("file:")) {
-        // Remote images would leak a request to a third party from a local
-        // document; the CSP blocks them anyway, so make the state visible.
+        // Remote images leak a request to a third party from a local
+        // document, so this is opt-in; the CSP only allows https: through.
+        if (this.settings.allowRemoteImages && src.startsWith("https:")) continue;
         media.setAttribute("data-blocked", "remote");
         media.removeAttribute("src");
         continue;
