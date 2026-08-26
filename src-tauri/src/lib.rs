@@ -1,4 +1,6 @@
 mod document;
+mod media;
+mod pdf;
 mod watcher;
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -105,6 +107,8 @@ pub fn run() {
             document::read_document,
             document::resolve_link,
             document::list_siblings,
+            media::read_file_as_data_url,
+            pdf::export_pdf,
             watcher::watch_document,
             watcher::unwatch_document,
         ])

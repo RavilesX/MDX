@@ -1,3 +1,5 @@
+import { IN_TAURI, readFileAsDataUrl } from "./bridge.js";
+
 /**
  * Standalone HTML export.
  *
@@ -20,7 +22,31 @@ function collectStyles(): string {
   return chunks.join("\n");
 }
 
-export function exportStandaloneHtml(content: HTMLElement, title: string): string {
+/**
+ * The viewer points local media at `asset:` URLs so the webview can load
+ * them; that scheme only resolves inside the webview itself. An export has
+ * to stand on its own — opened later, on another machine, or fed to a
+ * headless browser for PDF rendering — so local media is re-read from the
+ * path the viewer stashed in `data-source-path` and inlined as `data:`.
+ */
+async function inlineLocalMedia(root: HTMLElement): Promise<void> {
+  if (!IN_TAURI) return;
+  const elements = Array.from(root.querySelectorAll<HTMLElement>("[data-source-path]"));
+  await Promise.all(
+    elements.map(async (el) => {
+      const path = el.getAttribute("data-source-path");
+      if (!path) return;
+      try {
+        el.setAttribute("src", await readFileAsDataUrl(path));
+      } catch {
+        // Leave the broken asset: src in place; better than losing the element.
+      }
+      el.removeAttribute("data-source-path");
+    }),
+  );
+}
+
+export async function exportStandaloneHtml(content: HTMLElement, title: string): Promise<string> {
   const clone = content.cloneNode(true) as HTMLElement;
 
   // Viewer-only affordances have no meaning in a static file.
@@ -37,6 +63,7 @@ export function exportStandaloneHtml(content: HTMLElement, title: string): strin
   for (const code of clone.querySelectorAll("code[data-highlight]")) {
     code.removeAttribute("data-highlight");
   }
+  await inlineLocalMedia(clone);
 
   const escapedTitle = title.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]!);
 

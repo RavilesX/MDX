@@ -6,6 +6,7 @@ import "./styles/chrome.css";
 import "./styles/markdown.css";
 
 import {
+  exportPdfFile,
   IN_TAURI,
   listSiblings,
   onDocumentEvent,
@@ -175,12 +176,24 @@ function scaleFont(delta: number): void {
 async function exportHtml(): Promise<void> {
   const doc = viewer.document;
   const name = doc?.payload.name.replace(/\.[^.]+$/, "") ?? "document";
-  const html = exportStandaloneHtml(el.content, name);
   try {
+    const html = await exportStandaloneHtml(el.content, name);
     const saved = await saveTextFile(`${name}.html`, html, "html");
     if (saved) toast(`Exported to ${saved}`);
   } catch (error) {
-    toast(error instanceof Error ? error.message : "Export failed");
+    toast(error instanceof Error ? error.message : String(error));
+  }
+}
+
+async function exportPdf(): Promise<void> {
+  const doc = viewer.document;
+  const name = doc?.payload.name.replace(/\.[^.]+$/, "") ?? "document";
+  try {
+    const html = await exportStandaloneHtml(el.content, name);
+    const saved = await exportPdfFile(`${name}.pdf`, html);
+    if (saved) toast(`Exported to ${saved}`);
+  } catch (error) {
+    toast(error instanceof Error ? error.message : String(error));
   }
 }
 
@@ -198,6 +211,11 @@ const menu = new Menu(el.menu, need("btn-menu"), (): MenuItem[] => {
       run: () => void revealInFileManager(doc!.payload.dir),
     },
     { kind: "action", label: "Export as HTML…", hint: "Ctrl ⇧ E", run: () => void exportHtml() },
+    {
+      kind: "action",
+      label: "Export as PDF…",
+      run: () => void exportPdf(),
+    },
     { kind: "action", label: "Print…", hint: "Ctrl P", run: () => window.print() },
 
     { kind: "separator", label: "Appearance" },

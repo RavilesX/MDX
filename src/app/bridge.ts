@@ -93,6 +93,29 @@ export async function pickFile(): Promise<string | null> {
   return typeof picked === "string" ? picked : null;
 }
 
+/** Local file → its bytes as a `data:` URI, for exports that must not depend on a path on disk. */
+export async function readFileAsDataUrl(path: string): Promise<string> {
+  if (!IN_TAURI) throw new Error("File access needs the desktop app");
+  return invoke<string>("read_file_as_data_url", { path });
+}
+
+/**
+ * Renders `html` to a PDF via a system Chromium/Chrome in headless mode and
+ * writes it to a user-chosen path. Unlike `window.print()`, which goes
+ * through WebKitGTK's own print pipeline, this keeps `<a href>` targets as
+ * clickable link annotations in the output.
+ */
+export async function exportPdfFile(defaultName: string, html: string): Promise<string | null> {
+  if (!IN_TAURI) return null;
+  const target = await saveDialog({
+    defaultPath: defaultName,
+    filters: [{ name: "PDF", extensions: ["pdf"] }],
+  });
+  if (!target) return null;
+  await invoke("export_pdf", { html, outPath: target });
+  return target;
+}
+
 export async function saveTextFile(
   defaultName: string,
   contents: string,
