@@ -195,11 +195,19 @@ mod tests {
         assert!(!document::is_markdown_path("/tmp/a.png"));
     }
 
+    // A `file:///home/...` URL has no drive letter, so it isn't representable
+    // as a Windows path — `Url::to_file_path()` correctly refuses it there and
+    // `strip_file_scheme` falls back to returning the string unchanged. That
+    // fallback is the right behaviour (the caller still has *something*
+    // usable), just not one a Unix-shaped URL can round-trip through on
+    // Windows, so these two are POSIX-only.
+    #[cfg(not(windows))]
     #[test]
     fn strips_unix_file_url() {
         assert_eq!(strip_file_scheme("file:///home/x/notes.md"), "/home/x/notes.md");
     }
 
+    #[cfg(not(windows))]
     #[test]
     fn strips_percent_encoding_in_file_url() {
         assert_eq!(
