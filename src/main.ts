@@ -19,6 +19,7 @@ import {
   startupDocument,
   toggleFullscreen,
 } from "./app/bridge.js";
+import { AboutPanel } from "./app/about.js";
 import { exportStandaloneHtml } from "./app/export.js";
 import { FindBar } from "./app/find.js";
 import { HELP_DOCUMENT } from "./app/help.js";
@@ -87,6 +88,14 @@ const find = new FindBar(
   need("find-count"),
   el.content,
   { next: need("find-next"), prev: need("find-prev"), close: need("find-close") },
+);
+const about = new AboutPanel(
+  need("about"),
+  need("about-version"),
+  need<HTMLButtonElement>("about-check"),
+  need("about-status"),
+  need("about-close"),
+  { repo: need("about-repo"), issues: need("about-issues"), license: need("about-license") },
 );
 
 /* ------------------------------------------------------------------ toast */
@@ -283,6 +292,7 @@ const menu = new Menu(el.menu, need("btn-menu"), (): MenuItem[] => {
       label: "Project page",
       run: () => void openExternal("https://github.com/Ravilesx/MDX"),
     },
+    { kind: "action", label: "About MDX…", run: () => about.open() },
   ];
 });
 

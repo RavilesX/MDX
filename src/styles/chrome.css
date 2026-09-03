@@ -476,6 +476,129 @@ mark.find-hit.current {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
+/* ------------------------------------------------------------- about */
+
+.about {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.about[hidden] {
+  display: none;
+}
+
+.about-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: min(100%, 22rem);
+  padding: 28px 24px 22px;
+  text-align: center;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+.about-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.about-icon {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 4px;
+  border-radius: 12px;
+}
+
+.about-card h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.about-version {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+}
+
+.about-tagline {
+  margin: 4px 0 18px;
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+}
+
+.about-update {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding-bottom: 18px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.about-btn {
+  padding: 7px 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--accent-fg);
+  background: var(--accent);
+  border-radius: 7px;
+}
+
+.about-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.about-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.about-status {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--fg-muted);
+}
+
+.about-status[data-kind="update"] {
+  color: var(--accent);
+}
+
+.about-status[data-kind="update"] a {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.about-status[data-kind="error"] {
+  color: var(--fg-faint);
+}
+
+.about-links {
+  display: flex;
+  gap: 16px;
+  font-size: 0.82rem;
+}
+
+.about-links a {
+  color: var(--fg-muted);
+}
+
+.about-links a:hover {
+  color: var(--accent);
+}
+
 /* --------------------------------------------------------------- print */
 
 @media print {
@@ -484,6 +607,7 @@ mark.find-hit.current {
   .find-bar,
   .menu,
   .toast,
+  .about,
   .reading-progress,
   .code-copy,
   .heading-anchor {

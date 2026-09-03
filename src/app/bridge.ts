@@ -1,9 +1,11 @@
+import { getVersion } from "@tauri-apps/api/app";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open as openDialog, save as saveDialog } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
+import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { openPath, openUrl } from "@tauri-apps/plugin-opener";
 
 /**
@@ -180,6 +182,66 @@ export async function onFilesDropped(handler: (paths: string[]) => void): Promis
     if (event.payload.type === "drop") handler(event.payload.paths);
     document.body.classList.toggle("dragging", event.payload.type === "over");
   });
+}
+
+const REPO = "RavilesX/MDX";
+
+/** The running app's own version, e.g. `"1.0.0"`. `"0.0.0"` outside Tauri. */
+export async function getAppVersion(): Promise<string> {
+  if (!IN_TAURI) return "0.0.0";
+  return getVersion();
+}
+
+export interface UpdateCheck {
+  current: string;
+  latest: string;
+  /** True when `latest` is a newer version than `current`. */
+  hasUpdate: boolean;
+  /** The GitHub release page to send the reader to. */
+  url: string;
+}
+
+/** `MAJOR.MINOR.PATCH` comparison — good enough for this project's tags, no need for a semver dependency. */
+function compareVersions(a: string, b: string): number {
+  const pa = a.split(".").map(Number);
+  const pb = b.split(".").map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (diff) return diff;
+  }
+  return 0;
+}
+
+/**
+ * Compares the running version against the project's latest GitHub release.
+ * Goes through `@tauri-apps/plugin-http` rather than the page's own `fetch`,
+ * so it is governed by the plugin's own allow-list (see
+ * `capabilities/default.json`) instead of needing the strict CSP relaxed —
+ * that scope covers exactly this one endpoint, nothing else.
+ */
+export async function checkForUpdate(): Promise<UpdateCheck> {
+  const current = await getAppVersion();
+  if (!IN_TAURI) throw new Error("Checking for updates needs the desktop app");
+
+  const response = await tauriFetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
+    headers: { Accept: "application/vnd.github+json" },
+  });
+  if (!response.ok) {
+    throw new Error(
+      response.status === 404 ? "No release has been published yet" : `GitHub returned ${response.status}`,
+    );
+  }
+
+  const data = (await response.json()) as { tag_name?: string; html_url?: string };
+  const latest = (data.tag_name ?? "").replace(/^v/, "");
+  if (!latest) throw new Error("Unexpected response from GitHub");
+
+  return {
+    current,
+    latest,
+    hasUpdate: compareVersions(latest, current) > 0,
+    url: data.html_url ?? `https://github.com/${REPO}/releases/latest`,
+  };
 }
 
 export { isAbsolutePath, joinPath, dirName, stripFileScheme } from "./paths.js";

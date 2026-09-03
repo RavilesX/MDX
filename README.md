@@ -55,6 +55,8 @@ No binaries for your platform yet, or want the latest from `main`? See
   adjustable text size.
 - **`.deb` and AppImage** packages on Linux, an **NSIS installer** on Windows,
   plus a way to keep a warm instance from login on both.
+- **About panel** with an on-demand update check against this repo's GitHub
+  releases — nothing runs on its own, only when asked.
 
 ## What it renders
 

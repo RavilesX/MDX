@@ -70,6 +70,27 @@
       <div class="menu" id="menu" hidden role="menu"></div>
       <div class="toast" id="toast" hidden></div>
       <div class="lightbox" id="lightbox" hidden><img id="lightbox-img" alt="" /></div>
+
+      <div class="about" id="about" hidden>
+        <div class="about-card" role="dialog" aria-modal="true" aria-labelledby="about-title">
+          <button class="tb-btn sm about-close" id="about-close" aria-label="Close">✕</button>
+          <img class="about-icon" src="/favicon.png" width="56" height="56" alt="" />
+          <h2 id="about-title">MDX</h2>
+          <p class="about-version" id="about-version">Version …</p>
+          <p class="about-tagline">A fast Markdown viewer for Linux and Windows.</p>
+
+          <div class="about-update">
+            <button class="about-btn" id="about-check" type="button">Check for updates</button>
+            <p class="about-status" id="about-status" hidden></p>
+          </div>
+
+          <div class="about-links">
+            <a href="#" id="about-repo">GitHub</a>
+            <a href="#" id="about-issues">Report an issue</a>
+            <a href="#" id="about-license">MIT Licence</a>
+          </div>
+        </div>
+      </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
