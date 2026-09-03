@@ -13,6 +13,8 @@ Not an editor — it opens a file, renders it well, and stays out of the way.
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-informational)
 ![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%202-24C8DB?logo=tauri&logoColor=white)
 
+**English** · [**Español**](#español)
+
 </div>
 
 ---
@@ -21,6 +23,19 @@ Built with [Tauri](https://tauri.app), so it uses the OS's own web engine —
 WebKitGTK on Linux, WebView2 (Edge) on Windows — instead of shipping its own
 browser. The binary is a few megabytes rather than the ~150 MB an Electron
 build would cost.
+
+## Download
+
+Grab the latest build from **[Releases](https://github.com/RavilesX/MDX/releases/latest)**:
+
+| Platform | File |
+| --- | --- |
+| Windows | `MDX_x64-setup.exe` — installer, or run `.\scripts\install-windows.ps1` to build and install from source |
+| Linux (Debian / Ubuntu / Mint) | `MDX_amd64.deb` |
+| Linux (any distro) | `MDX_amd64.AppImage` — no install needed, just `chmod +x` and run |
+
+No binaries for your platform yet, or want the latest from `main`? See
+[Building](#building) below.
 
 ## Features
 
@@ -237,6 +252,66 @@ samples/         the feature showcase document
 The Rust side stays deliberately small: read a file, resolve a link, watch for
 changes, own the window, shell out to a headless browser for PDF export.
 Everything about rendering lives in the web layer.
+
+## Español
+
+**Un visor de Markdown rápido para Linux y Windows.**
+
+No es un editor — abre un archivo, lo renderiza bien, y no estorba. Construido
+con [Tauri](https://tauri.app), así que usa el motor web propio del sistema
+(WebKitGTK en Linux, WebView2/Edge en Windows) en vez de cargar un navegador
+propio: el binario pesa unos pocos megabytes en lugar de los ~150 MB de una
+app hecha con Electron.
+
+### Características
+
+- **Amplio soporte de Markdown** — CommonMark, extensiones estilo GitHub,
+  notas al pie, matemáticas (KaTeX), diagramas (Mermaid), resaltado de
+  sintaxis. Ver la [tabla completa](#what-it-renders) más arriba.
+- **Rápido por diseño** — un único proceso residente, librerías pesadas
+  cargadas bajo demanda, renderizado progresivo.
+- **Exportar a HTML autónomo** con todo el estilo y contenido incrustado, o a
+  **PDF** (con hipervínculos funcionales) vía un Chromium del sistema en modo
+  headless, o **imprimir** con el diálogo nativo.
+- **Saneado por defecto** — DOMPurify más una CSP estricta en el webview; las
+  imágenes remotas son opt-in.
+- **Recarga automática** al detectar cambios en disco, tabla de contenidos,
+  buscar en el documento, cuatro anchos, cinco temas (automático, claro,
+  oscuro, sepia, alto contraste).
+
+### Descargar e instalar
+
+La forma más simple: descarga el instalador desde
+**[Releases](https://github.com/RavilesX/MDX/releases/latest)** — `.exe` para
+Windows, `.deb` o `.AppImage` para Linux.
+
+Para compilar e instalar desde el código fuente:
+
+```bash
+# Linux
+./scripts/install-linux.sh
+```
+
+```powershell
+# Windows (PowerShell)
+.\scripts\install-windows.ps1
+```
+
+Ambos scripts instalan para el usuario actual (sin necesitar permisos de
+administrador ni root), añaden `mdx` al `PATH`, y hacen de MDX el visor por
+defecto para archivos `.md`. Detalles de dependencias, compilación paso a
+paso, atajos de teclado y arquitectura interna están en el resto de este
+README (en inglés) — el código y los comentarios también están en inglés,
+pero el proyecto agradece reportes de errores o preguntas en español.
+
+### Contacto
+
+- **Autor**: Ricardo Avilés Sanders (RavilesX)
+- **Correo**: ravilesx@gmail.com
+- **GitHub**: [github.com/RavilesX](https://github.com/RavilesX)
+
+Reporta errores o sugerencias en [Issues](https://github.com/RavilesX/MDX/issues)
+— en español o en inglés, como prefieras.
 
 ## Contact
 
