@@ -8,7 +8,7 @@
 
 Not an editor — it opens a file, renders it well, and stays out of the way.
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue)
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-informational)
 ![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%202-24C8DB?logo=tauri&logoColor=white)

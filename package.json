@@ -1,7 +1,7 @@
 {
   "name": "mdx",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "Fast Markdown visualizer",
   "scripts": {
@@ -11,7 +11,7 @@
     "tauri": "tauri",
     "app:dev": "tauri dev",
     "app:build": "tauri build",
-    "test": "esbuild tests/*.test.ts --bundle --platform=node --format=esm --outdir=.test --log-level=warning && node --test .test/*.test.js",
+    "test": "node scripts/run-tests.mjs",
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml"
   },
   "dependencies": {
@@ -47,6 +47,7 @@
     "@types/js-yaml": "^4.0.9",
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^26.2.0",
+    "esbuild": "^0.25.12",
     "typescript": "^5.8.3",
     "vite": "^6.3.5"
   }
