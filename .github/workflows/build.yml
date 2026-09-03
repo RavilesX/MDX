@@ -1,0 +1,81 @@
+name: Build
+
+# Compiles and tests MDX on both platforms it targets. Runs the same steps a
+# contributor would run locally (scripts/install-deps.sh /
+# scripts/install-deps.ps1, then npm test, cargo test, npm run app:build) so
+# a regression that only shows up on Windows — a path bug, a missing
+# platform-specific dependency — is caught here instead of after release.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            bundles: |
+              src-tauri/target/release/bundle/deb/*.deb
+              src-tauri/target/release/bundle/appimage/*.AppImage
+          - os: windows-latest
+            bundles: src-tauri/target/release/bundle/nsis/*.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # windows-latest defaults to the MSVC host triple already, which is
+      # what Tauri needs on Windows — the GNU toolchain cannot link against
+      # WebView2.
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install Linux build dependencies
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            build-essential \
+            curl wget file \
+            libssl-dev \
+            libxdo-dev \
+            pkg-config
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Frontend tests
+        run: npm test
+
+      - name: Rust tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Rust lints
+        run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+
+      - name: Build app bundles
+        run: npm run app:build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mdx-${{ matrix.os }}
+          path: ${{ matrix.bundles }}
+          if-no-files-found: error

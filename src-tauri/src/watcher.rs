@@ -7,6 +7,8 @@ use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Runtime};
 
+use crate::document;
+
 /// Editors rarely write a file once. Vim and friends write a temp file and
 /// rename it over the target, which arrives as a burst of events; this window
 /// collapses the burst into a single reload.
@@ -82,12 +84,12 @@ fn matches_event(event: &notify::Result<Event>, watched: &Path) -> bool {
         event.as_ref().map(|e| e.kind),
         Ok(EventKind::Create(_)) | Ok(EventKind::Modify(_)) | Ok(EventKind::Any)
     );
-    kind_ok && event_paths(event).iter().any(|p| p == watched)
+    kind_ok && event_paths(event).iter().any(|p| document::same_path(p, watched))
 }
 
 fn is_removal(event: &notify::Result<Event>, watched: &Path) -> bool {
     matches!(event.as_ref().map(|e| e.kind), Ok(EventKind::Remove(_)))
-        && event_paths(event).iter().any(|p| p == watched)
+        && event_paths(event).iter().any(|p| document::same_path(p, watched))
 }
 
 /// Watch a single document for changes, replacing any previous watch.
@@ -101,7 +103,7 @@ pub fn watch_document<R: Runtime>(
     state: tauri::State<'_, WatchState>,
     path: String,
 ) -> Result<(), String> {
-    let file = std::fs::canonicalize(&path).map_err(|e| e.to_string())?;
+    let file = document::canonical(&path).map_err(|e| e.to_string())?;
     let dir = file
         .parent()
         .ok_or_else(|| String::from("document has no parent directory"))?
@@ -109,7 +111,7 @@ pub fn watch_document<R: Runtime>(
 
     let mut guard = state.active.lock().map_err(|e| e.to_string())?;
     if let Some((_, current)) = guard.as_ref() {
-        if current == &file {
+        if document::same_path(current, &file) {
             return Ok(());
         }
     }

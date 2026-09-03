@@ -182,19 +182,4 @@ export async function onFilesDropped(handler: (paths: string[]) => void): Promis
   });
 }
 
-export function joinPath(dir: string, relative: string): string {
-  if (relative.startsWith("/")) return relative;
-  const parts = `${dir}/${relative}`.split("/");
-  const stack: string[] = [];
-  for (const part of parts) {
-    if (part === "" || part === ".") continue;
-    if (part === "..") stack.pop();
-    else stack.push(part);
-  }
-  return `/${stack.join("/")}`;
-}
-
-export function dirName(path: string): string {
-  const index = path.lastIndexOf("/");
-  return index <= 0 ? "/" : path.slice(0, index);
-}
+export { isAbsolutePath, joinPath, dirName, stripFileScheme } from "./paths.js";

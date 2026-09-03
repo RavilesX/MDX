@@ -17,6 +17,7 @@ import {
   readDocument,
   resolveLink,
   setWindowTitle,
+  stripFileScheme,
   watchDocument,
   type DocumentPayload,
 } from "./bridge.js";
@@ -261,7 +262,7 @@ export class Viewer {
         media.removeAttribute("src");
         continue;
       }
-      const absolute = src.startsWith("file://") ? src.slice(7) : joinPath(dir, src);
+      const absolute = src.startsWith("file://") ? stripFileScheme(src) : joinPath(dir, src);
       media.setAttribute("src", assetUrl(absolute));
       media.setAttribute("data-source-path", absolute);
     }

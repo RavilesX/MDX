@@ -26,15 +26,29 @@ struct OpenPayload {
     path: String,
 }
 
+/// Strip a `file://` scheme off a launch argument, if present. Delegated to
+/// `url::Url` rather than a plain prefix-cut: on Windows a `file://` URL
+/// looks like `file:///C:/Users/x/a.md`, so `strip_prefix("file://")` alone
+/// would leave a leading `/C:/...` that no longer names a real path, and
+/// spaces or accents in the path can arrive percent-encoded either way.
+fn strip_file_scheme(arg: &str) -> String {
+    url::Url::parse(arg)
+        .ok()
+        .filter(|url| url.scheme() == "file")
+        .and_then(|url| url.to_file_path().ok())
+        .map(|p| p.to_string_lossy().into_owned())
+        .unwrap_or_else(|| arg.to_string())
+}
+
 /// Pick the first argument that names a file on disk. Flags and the argv[0]
 /// program path are skipped.
 fn first_file_arg<I: IntoIterator<Item = String>>(args: I) -> Option<String> {
     args.into_iter()
         .skip(1)
         .filter(|a| !a.starts_with('-'))
-        .map(|a| a.strip_prefix("file://").map(str::to_string).unwrap_or(a))
+        .map(|a| strip_file_scheme(&a))
         .find(|a| std::path::Path::new(a).is_file())
-        .and_then(|a| std::fs::canonicalize(a).ok())
+        .and_then(|a| document::canonical(a).ok())
         .map(|p| p.to_string_lossy().into_owned())
 }
 
@@ -179,5 +193,39 @@ mod tests {
         assert!(document::is_markdown_path("/tmp/a.MD"));
         assert!(document::is_markdown_path("/tmp/a.markdown"));
         assert!(!document::is_markdown_path("/tmp/a.png"));
+    }
+
+    #[test]
+    fn strips_unix_file_url() {
+        assert_eq!(strip_file_scheme("file:///home/x/notes.md"), "/home/x/notes.md");
+    }
+
+    #[test]
+    fn strips_percent_encoding_in_file_url() {
+        assert_eq!(
+            strip_file_scheme("file:///home/x/my%20notes.md"),
+            "/home/x/my notes.md"
+        );
+    }
+
+    #[test]
+    fn leaves_plain_paths_untouched() {
+        assert_eq!(strip_file_scheme("/home/x/notes.md"), "/home/x/notes.md");
+        assert_eq!(strip_file_scheme("notes.md"), "notes.md");
+        // A bare Windows drive path parses as a scheme-looking string, but its
+        // scheme is "c", not "file", so it must pass through unchanged.
+        assert_eq!(
+            strip_file_scheme("C:\\Users\\x\\notes.md"),
+            "C:\\Users\\x\\notes.md"
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn strips_windows_file_url() {
+        assert_eq!(
+            strip_file_scheme("file:///C:/Users/x/notes.md"),
+            "C:\\Users\\x\\notes.md"
+        );
     }
 }

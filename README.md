@@ -4,22 +4,23 @@
 
 # MDX
 
-**A fast Markdown viewer for Linux.**
+**A fast Markdown viewer for Linux and Windows.**
 
 Not an editor — it opens a file, renders it well, and stays out of the way.
 
 ![Version](https://img.shields.io/badge/version-0.1.0-blue)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-![Platform](https://img.shields.io/badge/platform-Linux-informational)
+![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-informational)
 ![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%202-24C8DB?logo=tauri&logoColor=white)
 
 </div>
 
 ---
 
-Built with [Tauri](https://tauri.app), so it uses the WebKitGTK already
-installed on the system instead of shipping its own browser. The binary is a
-few megabytes rather than the ~150 MB an Electron build would cost.
+Built with [Tauri](https://tauri.app), so it uses the OS's own web engine —
+WebKitGTK on Linux, WebView2 (Edge) on Windows — instead of shipping its own
+browser. The binary is a few megabytes rather than the ~150 MB an Electron
+build would cost.
 
 ## Features
 
@@ -37,8 +38,8 @@ few megabytes rather than the ~150 MB an Electron build would cost.
 - **File-watching auto-reload**, table of contents, find-in-document, four
   widths, five themes (auto, light, dark, sepia, high contrast), and
   adjustable text size.
-- **`.deb` and AppImage** packages, plus a systemd user service to keep a
-  warm instance from login.
+- **`.deb` and AppImage** packages on Linux, an **NSIS installer** on Windows,
+  plus a way to keep a warm instance from login on both.
 
 ## What it renders
 
@@ -94,10 +95,14 @@ stop a document from making third-party requests just by being opened.
 | PDF | Menu → Export as PDF… | Rendered by a system Chromium/Chrome in headless mode — links stay clickable and local images stay embedded, unlike printing through the native dialog |
 | PDF (native) | Menu → Print… (`Ctrl P`) | Goes through the OS print dialog; pick "Print to file" / "Save as PDF". Simpler, but WebKitGTK's own print pipeline drops hyperlinks |
 
-The headless-Chromium path needs Chromium, Google Chrome, Brave, or Edge on
-`PATH`. Without one, use Print… instead.
+The headless-Chromium path needs Chromium, Google Chrome, Brave, or Edge —
+on Linux, found on `PATH`; on Windows, found in its usual install location or
+the registry (Edge ships with Windows, so this normally just works). Without
+one, use Print… instead.
 
 ## Building
+
+### Linux
 
 ```bash
 ./scripts/install-deps.sh   # WebKitGTK headers, build tools, Rust toolchain
@@ -115,7 +120,7 @@ Or build and install for the current user in one step:
 That puts `mdx` in `~/.local/bin`, registers the desktop entry and icon, and
 makes MDX the default handler for `text/markdown`.
 
-### Keeping a warm instance
+#### Keeping a warm instance
 
 ```bash
 mkdir -p ~/.config/systemd/user
@@ -126,6 +131,38 @@ systemctl --user enable --now mdx.service
 
 `mdx --hidden` starts the process with no window. The first real `mdx file.md`
 then draws into a window that already exists.
+
+### Windows
+
+Needs the MSVC Rust toolchain (not GNU — it cannot link against WebView2),
+the Visual Studio Build Tools' C++ workload, Node, and the
+[WebView2 runtime](https://developer.microsoft.com/microsoft-edge/webview2/)
+(preinstalled on an updated Windows 10/11).
+
+```powershell
+.\scripts\install-deps.ps1   # Build Tools, Node, WebView2 runtime, Rust (via winget)
+npm install
+npm run app:dev              # development, with hot reload
+npm run app:build            # release binary + NSIS installer
+```
+
+Or build and install for the current user in one step:
+
+```powershell
+.\scripts\install-windows.ps1
+```
+
+That puts `mdx.exe` in `%LOCALAPPDATA%\Programs\MDX`, adds it to your user
+`PATH`, and makes MDX the default handler for `.md` and friends — all under
+`HKEY_CURRENT_USER`, no admin needed. Running the NSIS installer built by
+`app:build` instead does the same thing through a conventional installer/
+uninstaller pair.
+
+#### Keeping a warm instance
+
+`install-windows.ps1` prints a ready-to-paste snippet that drops a shortcut
+into the Startup folder with `mdx.exe --hidden` as its target — the same
+warm-process trick the systemd service does on Linux.
 
 ## Keyboard
 
@@ -156,13 +193,17 @@ window updates the view without touching MDX.
 ```
 src/
   markdown/      parser, plugins, sanitiser, lazy library loading
-  app/           viewer, sidebar, find, menu, settings, IPC bridge
+  app/           viewer, sidebar, find, menu, settings, IPC bridge, path helpers
   styles/        themes and rendered-document styling
 src-tauri/
   src/           file reading, link resolution, filesystem watching, PDF export
-scripts/         dependency and install helpers
+  tauri.conf.json           shared config
+  tauri.linux.conf.json     .deb / AppImage bundle targets
+  tauri.windows.conf.json   NSIS bundle target, WebView2 install mode
+scripts/         dependency and install helpers, .sh for Linux / .ps1 for Windows
 packaging/       desktop entries (one for ~/.local, one .hbs template
                  the .deb bundler fills in) and the systemd user service
+.github/workflows/  CI: tests and bundle builds on Linux and Windows
 samples/         the feature showcase document
 ```
 

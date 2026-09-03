@@ -1,9 +1,30 @@
 use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
 
 use serde::Serialize;
 use tauri::{AppHandle, Manager, Runtime};
+
+/// Canonicalize a path the way the rest of the app wants it: fully resolved,
+/// but without Windows' `\\?\` verbatim prefix. `fs::canonicalize` alone
+/// returns that prefix on Windows, which then leaks into window titles,
+/// `convertFileSrc` URLs and path comparisons in the watcher. `dunce` strips
+/// it whenever the path is representable without it (i.e. always, short of
+/// paths over ~260 chars or ones that need the verbatim form to resolve).
+pub fn canonical<P: AsRef<Path>>(path: P) -> io::Result<PathBuf> {
+    dunce::canonicalize(path)
+}
+
+/// Case-insensitive, separator-normalised path equality on Windows (NTFS
+/// does not distinguish case); exact equality everywhere else.
+pub fn same_path(a: &Path, b: &Path) -> bool {
+    if cfg!(windows) {
+        a.to_string_lossy().eq_ignore_ascii_case(&b.to_string_lossy())
+    } else {
+        a == b
+    }
+}
 
 /// Refuse to slurp something that is clearly not a document. 64 MB of
 /// Markdown is already far past anything a human wrote.
@@ -39,7 +60,7 @@ fn allow_directory<R: Runtime>(app: &AppHandle<R>, dir: &Path) {
 #[tauri::command]
 pub fn read_document<R: Runtime>(app: AppHandle<R>, path: String) -> Result<Document, String> {
     let raw = PathBuf::from(&path);
-    let resolved = fs::canonicalize(&raw).map_err(|e| format!("{}: {}", path, e))?;
+    let resolved = canonical(&raw).map_err(|e| format!("{}: {}", path, e))?;
 
     let meta = fs::metadata(&resolved).map_err(|e| e.to_string())?;
     if meta.is_dir() {
@@ -62,10 +83,13 @@ pub fn read_document<R: Runtime>(app: AppHandle<R>, path: String) -> Result<Docu
         Err(err) => (String::from_utf8_lossy(err.as_bytes()).into_owned(), true),
     };
 
+    // `resolved` is canonical, so it always has an ancestor root (`/` on Unix,
+    // `C:\` on Windows); fall back to the resolved path itself only in the
+    // theoretical case a root has no parent of its own.
     let dir = resolved
         .parent()
         .map(Path::to_path_buf)
-        .unwrap_or_else(|| PathBuf::from("/"));
+        .unwrap_or_else(|| resolved.clone());
     allow_directory(&app, &dir);
 
     let modified = meta
@@ -167,7 +191,7 @@ pub fn resolve_link<R: Runtime>(
 
     for candidate in candidate_paths(&base, &target) {
         if candidate.is_file() {
-            let resolved = fs::canonicalize(&candidate).map_err(|e| e.to_string())?;
+            let resolved = canonical(&candidate).map_err(|e| e.to_string())?;
             if let Some(parent) = resolved.parent() {
                 allow_directory(&app, parent);
             }
@@ -183,7 +207,7 @@ pub fn resolve_link<R: Runtime>(
 
     let mut budget = 4000usize;
     if let Some(found) = search_by_stem(&base, &stem, 5, &mut budget) {
-        let resolved = fs::canonicalize(&found).map_err(|e| e.to_string())?;
+        let resolved = canonical(&found).map_err(|e| e.to_string())?;
         if let Some(parent) = resolved.parent() {
             allow_directory(&app, parent);
         }
@@ -215,4 +239,28 @@ pub fn is_markdown_path(path: &str) -> bool {
         .extension()
         .map(|e| MARKDOWN_EXTENSIONS.contains(&e.to_string_lossy().to_lowercase().as_str()))
         .unwrap_or(false)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn same_path_requires_exact_match_on_unix() {
+        if cfg!(windows) {
+            return;
+        }
+        assert!(same_path(Path::new("/home/x/a.md"), Path::new("/home/x/a.md")));
+        assert!(!same_path(Path::new("/home/x/a.md"), Path::new("/home/X/a.md")));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn same_path_ignores_case_on_windows() {
+        assert!(same_path(
+            Path::new(r"C:\Users\x\a.md"),
+            Path::new(r"C:\USERS\X\A.MD")
+        ));
+        assert!(!same_path(Path::new(r"C:\Users\x\a.md"), Path::new(r"C:\Users\x\b.md")));
+    }
 }
