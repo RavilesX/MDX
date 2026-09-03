@@ -164,6 +164,33 @@ uninstaller pair.
 into the Startup folder with `mdx.exe --hidden` as its target — the same
 warm-process trick the systemd service does on Linux.
 
+### CI
+
+[`.github/workflows/build.yml`](.github/workflows/build.yml) runs on every
+push and PR: type-check, frontend tests, Rust tests and lints, then a full
+`app:build` on both Linux and Windows, so a platform-specific regression
+shows up there rather than after a release.
+
+### Releasing
+
+[`.github/workflows/release.yml`](.github/workflows/release.yml) builds both
+platforms and publishes them as one **draft** GitHub Release — reviewed and
+published by hand, nothing goes live on its own. To cut one:
+
+1. Bump the version in `package.json`, `src-tauri/Cargo.toml` and
+   `src-tauri/tauri.conf.json` — all three, the workflow checks they agree
+   with the tag and fails otherwise.
+2. Commit that on `main`.
+3. Tag it and push the tag:
+
+   ```bash
+   git tag v0.2.0
+   git push origin v0.2.0
+   ```
+
+The workflow builds the `.deb`, the AppImage and the NSIS installer, runs the
+same checks as CI first, and attaches everything to the draft release.
+
 ## Keyboard
 
 | Shortcut | Action |

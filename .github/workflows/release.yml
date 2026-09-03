@@ -1,0 +1,95 @@
+name: Release
+
+# Builds MDX for Linux and Windows and publishes both to one GitHub Release,
+# as a draft — review the generated notes and attached bundles, then publish
+# it by hand.
+#
+# Cutting a release:
+#   1. Bump the version in package.json, src-tauri/Cargo.toml and
+#      src-tauri/tauri.conf.json (all three — Tauri checks they agree).
+#   2. Commit that on main.
+#   3. Tag it and push the tag:
+#        git tag v0.2.0 && git push origin v0.2.0
+#   This workflow does the rest.
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # windows-latest defaults to the MSVC host triple, which is what Tauri
+      # needs on Windows — the GNU toolchain cannot link against WebView2.
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install Linux build dependencies
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            build-essential \
+            curl wget file \
+            libssl-dev \
+            libxdo-dev \
+            pkg-config
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      # Same checks as the CI build — a tag can be pushed from any commit,
+      # not just one build.yml already validated, so this is not redundant.
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Frontend tests
+        run: npm test
+
+      - name: Rust tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Rust lints
+        run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+
+      - name: Check versions agree with the tag
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg=$(node -p "require('./package.json').version")
+          tauri=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          cargo=$(grep -m1 '^version' src-tauri/Cargo.toml | sed -E 's/version *= *"([^"]+)".*/\1/')
+          if [ "$pkg" != "$tag" ] || [ "$tauri" != "$tag" ] || [ "$cargo" != "$tag" ]; then
+            echo "Tag $GITHUB_REF_NAME ($tag) doesn't match package.json ($pkg) / tauri.conf.json ($tauri) / Cargo.toml ($cargo)."
+            exit 1
+          fi
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "MDX ${{ github.ref_name }}"
+          releaseDraft: true
+          prerelease: false
