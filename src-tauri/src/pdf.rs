@@ -107,7 +107,7 @@ mod platform {
     fn program_files_roots() -> Vec<PathBuf> {
         ["ProgramFiles", "ProgramFiles(x86)", "LocalAppData"]
             .iter()
-            .filter_map(|var| std::env::var_os(var))
+            .filter_map(std::env::var_os)
             .map(PathBuf::from)
             .collect()
     }
