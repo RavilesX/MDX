@@ -6,6 +6,7 @@ import "./styles/chrome.css";
 import "./styles/markdown.css";
 
 import {
+  baseName,
   exportPdfFile,
   IN_TAURI,
   listSiblings,
@@ -27,8 +28,10 @@ import { Menu, type MenuItem } from "./app/menu.js";
 import {
   DEFAULT_SETTINGS,
   forgetRecent,
+  loadOpenTabs,
   loadRecents,
   loadSettings,
+  saveOpenTabs,
   saveSettings,
   THEMES,
   WIDTHS,
@@ -36,6 +39,7 @@ import {
   type Theme,
   type Width,
 } from "./app/settings.js";
+import { TabBar, type Tab } from "./app/tabs.js";
 import { applyTheme, watchSystemTheme } from "./app/theme.js";
 import { TableOfContents } from "./app/toc.js";
 import { Viewer } from "./app/viewer.js";
@@ -61,6 +65,7 @@ const el = {
   recents: need<HTMLUListElement>("recents"),
   toast: need("toast"),
   menu: need("menu"),
+  tabs: need("tabs"),
 };
 
 let settings: Settings = loadSettings();
@@ -109,31 +114,98 @@ function toast(message: string): void {
 }
 window.addEventListener("mdx:toast", (event) => toast(String((event as CustomEvent).detail)));
 
-/* ---------------------------------------------------------------- history */
+/* ------------------------------------------------------------------- tabs */
 
-const history: string[] = [];
-let historyIndex = -1;
+const tabs = new TabBar(el.tabs);
 
-async function openPath(path: string, options: { pushHistory?: boolean } = {}): Promise<void> {
+/** True while a back/forward step is in flight, so it is not itself recorded. */
+let navigating = false;
+
+tabs.onActivate = (tab) => void loadTab(tab);
+tabs.onChange = () => saveOpenTabs(tabs.toStored());
+tabs.onEmpty = () => viewer.clear();
+
+/** Points the viewer at a tab. A file that will not open takes its tab with it. */
+async function loadTab(tab: Tab): Promise<void> {
+  find.reset();
+  if (tab.kind === "inline") {
+    viewer.showInline(tab.source ?? "", tab.name);
+    return;
+  }
   try {
-    find.reset();
-    await viewer.open(path);
-    if (options.pushHistory !== false) {
-      history.splice(historyIndex + 1);
-      history.push(path);
-      historyIndex = history.length - 1;
-    }
+    await viewer.open(tab.path);
     renderRecents();
   } catch (error) {
     toast(error instanceof Error ? error.message : String(error));
+    tabs.close(tab.id);
   }
 }
 
+/**
+ * Opens `path`, by default in a tab of its own. Following a link inside a
+ * document passes `newTab: false` so the reader stays where they are; either
+ * way a file that is already open is brought forward rather than duplicated.
+ */
+async function openPath(path: string, options: { newTab?: boolean } = {}): Promise<void> {
+  const existing = tabs.findByPath(path);
+  if (existing) {
+    if (tabs.active?.id === existing.id) return;
+    tabs.setActive(existing.id);
+    await loadTab(existing);
+    return;
+  }
+
+  const active = tabs.active;
+  if (options.newTab === false && active?.kind === "file") {
+    tabs.navigated(active, path, baseName(path));
+    await loadTab(active);
+    return;
+  }
+
+  await loadTab(tabs.add({ kind: "file", path, name: baseName(path) }));
+}
+
+/** A multi-file drop: every file gets a tab, only the first one is rendered. */
+async function openPaths(paths: string[]): Promise<void> {
+  let first: Tab | null = null;
+  for (const path of paths) {
+    const tab =
+      tabs.findByPath(path) ?? tabs.add({ kind: "file", path, name: baseName(path) }, false);
+    first ??= tab;
+  }
+  if (!first) return;
+  tabs.setActive(first.id);
+  await loadTab(first);
+}
+
+/** The built-in pages (help, showcase) get a tab too, backed by memory. */
+function openInline(source: string, name: string): void {
+  const existing = tabs.all.find((tab) => tab.kind === "inline" && tab.name === name);
+  const tab = existing ?? tabs.add({ kind: "inline", path: "", name, source });
+  if (existing) tabs.setActive(existing.id);
+  void loadTab(tab);
+}
+
+/* --------------------------------------------------------------- history */
+
+/** Back and forward are per tab, like the documents themselves. */
 async function goHistory(direction: number): Promise<void> {
-  const next = historyIndex + direction;
-  if (next < 0 || next >= history.length) return;
-  historyIndex = next;
-  await openPath(history[next], { pushHistory: false });
+  const tab = tabs.active;
+  if (!tab || tab.kind !== "file") return;
+  const next = tab.historyIndex + direction;
+  if (next < 0 || next >= tab.history.length) return;
+
+  navigating = true;
+  try {
+    find.reset();
+    await viewer.open(tab.history[next]);
+    tab.historyIndex = next;
+    renderRecents();
+  } catch (error) {
+    toast(error instanceof Error ? error.message : String(error));
+  } finally {
+    navigating = false;
+  }
 }
 
 async function goSibling(direction: number): Promise<void> {
@@ -147,7 +219,7 @@ async function goSibling(direction: number): Promise<void> {
     toast(direction > 0 ? "Last file in this folder" : "First file in this folder");
     return;
   }
-  await openPath(target);
+  await openPath(target, { newTab: false });
 }
 
 /* ------------------------------------------------------------- settings UI */
@@ -212,6 +284,7 @@ const menu = new Menu(el.menu, need("btn-menu"), (): MenuItem[] => {
   const doc = viewer.document;
   return [
     { kind: "separator", label: "Document" },
+    { kind: "action", label: "Open in a new tab…", hint: "Ctrl T", run: () => void chooseFile() },
     { kind: "action", label: "Reload", hint: "Ctrl R", disabled: !doc, run: () => void viewer.reload() },
     {
       kind: "action",
@@ -226,6 +299,24 @@ const menu = new Menu(el.menu, need("btn-menu"), (): MenuItem[] => {
       run: () => void exportPdf(),
     },
     { kind: "action", label: "Print…", hint: "Ctrl P", run: () => window.print() },
+
+    { kind: "separator", label: "Tabs" },
+    {
+      kind: "action",
+      label: "Close tab",
+      hint: "Ctrl W",
+      disabled: !tabs.count,
+      run: () => tabs.closeActive(),
+    },
+    {
+      kind: "action",
+      label: "Close other tabs",
+      disabled: tabs.count < 2,
+      run: () => {
+        const active = tabs.active;
+        if (active) tabs.closeOthers(active.id);
+      },
+    },
 
     { kind: "separator", label: "Appearance" },
     {
@@ -285,8 +376,8 @@ const menu = new Menu(el.menu, need("btn-menu"), (): MenuItem[] => {
     },
 
     { kind: "separator", label: "Help" },
-    { kind: "action", label: "Feature showcase", run: () => viewer.showInline(showcase, "Feature showcase") },
-    { kind: "action", label: "Keyboard shortcuts", hint: "?", run: () => viewer.showInline(HELP_DOCUMENT, "Keyboard shortcuts") },
+    { kind: "action", label: "Feature showcase", run: () => openInline(showcase, "Feature showcase") },
+    { kind: "action", label: "Keyboard shortcuts", hint: "?", run: () => openInline(HELP_DOCUMENT, "Keyboard shortcuts") },
     {
       kind: "action",
       label: "Project page",
@@ -348,9 +439,22 @@ document.addEventListener("keydown", (event) => {
     event.target instanceof HTMLElement &&
     (event.target.tagName === "INPUT" || event.target.tagName === "SELECT");
 
-  if (mod && event.key.toLowerCase() === "o") {
+  if (mod && (event.key.toLowerCase() === "o" || event.key.toLowerCase() === "t")) {
     event.preventDefault();
     void chooseFile();
+  } else if (mod && event.key.toLowerCase() === "w") {
+    event.preventDefault();
+    tabs.closeActive();
+  } else if (mod && event.key === "Tab") {
+    event.preventDefault();
+    tabs.cycle(event.shiftKey ? -1 : 1);
+  } else if (mod && (event.key === "PageDown" || event.key === "PageUp")) {
+    event.preventDefault();
+    tabs.cycle(event.key === "PageDown" ? 1 : -1);
+  } else if (mod && event.key >= "1" && event.key <= "9") {
+    event.preventDefault();
+    // Ctrl+9 is the last tab, whichever number that is — as in a browser.
+    tabs.selectIndex(event.key === "9" ? tabs.count - 1 : Number(event.key) - 1);
   } else if (mod && event.key.toLowerCase() === "r") {
     event.preventDefault();
     void viewer.reload();
@@ -405,7 +509,7 @@ document.addEventListener("keydown", (event) => {
     }
   } else if (event.key === "?" && !typing) {
     event.preventDefault();
-    viewer.showInline(HELP_DOCUMENT, "Keyboard shortcuts");
+    openInline(HELP_DOCUMENT, "Keyboard shortcuts");
   }
 });
 
@@ -426,8 +530,18 @@ need("btn-sidebar").addEventListener("click", () =>
 );
 
 toc.onSelect = (slug) => viewer.scrollToSlug(slug);
-viewer.onDocument = (doc) => toc.set(doc.render.headings);
 viewer.onActiveHeading = (slug) => toc.setActive(slug);
+viewer.onCleared = () => toc.set([]);
+
+// Links followed inside a document are opened by the viewer itself, so the
+// active tab learns where it ended up from here rather than from openPath.
+viewer.onDocument = (doc) => {
+  toc.set(doc.render.headings);
+  const tab = tabs.active;
+  if (!tab || tab.kind !== "file" || !doc.payload.path) return;
+  if (tab.path === doc.payload.path) return;
+  tabs.navigated(tab, doc.payload.path, doc.payload.name, !navigating);
+};
 
 /* ------------------------------------------------------------------- boot */
 
@@ -444,14 +558,22 @@ async function boot(): Promise<void> {
     onDocumentEvent("document:removed", () => toast("The file was deleted or moved")),
     onFilesDropped((paths) => {
       document.body.classList.remove("dragging");
-      if (paths.length) void openPath(paths[0]);
+      if (paths.length) void openPaths(paths);
     }),
   ]);
 
-  const initial = await startupDocument();
-  if (initial) await openPath(initial);
+  tabs.restore(loadOpenTabs());
 
-  await signalReady();
+  // The window is still hidden at this point, so `signalReady` has to run
+  // whatever the documents do — a file that has gone missing since the last
+  // session must not leave the app with no window at all.
+  try {
+    const initial = await startupDocument();
+    if (initial) await openPath(initial);
+    else if (tabs.active) await loadTab(tabs.active);
+  } finally {
+    await signalReady();
+  }
 }
 
 void boot();

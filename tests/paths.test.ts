@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { dirName, isAbsolutePath, joinPath, stripFileScheme } from "../src/app/paths.js";
+import { baseName, dirName, isAbsolutePath, joinPath, stripFileScheme } from "../src/app/paths.js";
 
 test("joinPath resolves POSIX-relative links", () => {
   assert.equal(joinPath("/home/x/docs", "img/pic.png"), "/home/x/docs/img/pic.png");
@@ -49,4 +49,12 @@ test("stripFileScheme handles POSIX and Windows file URLs", () => {
   assert.equal(stripFileScheme("file:///C:/Users/x/a.md"), "C:/Users/x/a.md");
   assert.equal(stripFileScheme("file:///home/x/my%20notes.md"), "/home/x/my notes.md");
   assert.equal(stripFileScheme("/home/x/a.md"), "/home/x/a.md");
+});
+
+test("baseName reads the last segment on either platform", () => {
+  assert.equal(baseName("/home/x/docs/a.md"), "a.md");
+  assert.equal(baseName("C:\\Users\\x\\docs\\a.md"), "a.md");
+  assert.equal(baseName("\\\\srv\\share\\a.md"), "a.md");
+  assert.equal(baseName("a.md"), "a.md");
+  assert.equal(baseName("/"), "/");
 });

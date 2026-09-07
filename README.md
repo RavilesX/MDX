@@ -43,6 +43,8 @@ No binaries for your platform yet, or want the latest from `main`? See
   footnotes, math, diagrams, and more. See the full table below.
 - **Fast by design** — one warm resident process, heavy libraries loaded on
   demand, progressive rendering. See [Why it feels fast](#why-it-feels-fast).
+- **Tabs** — several documents open at once, each with its own back/forward
+  history; the open set is restored on the next launch.
 - **Export as standalone HTML** with all styling and rendered content inlined.
 - **Export as PDF** via a system Chromium/Chrome in headless mode, with real
   clickable hyperlinks and local images embedded — the exported file stays
@@ -212,12 +214,15 @@ same checks as CI first, and attaches everything to the draft release.
 
 | Shortcut | Action |
 | --- | --- |
-| `Ctrl` `O` | Open |
+| `Ctrl` `O` / `Ctrl` `T` | Open a file in a new tab |
+| `Ctrl` `W` | Close the current tab |
+| `Ctrl` `Tab` / `Ctrl` `Shift` `Tab` | Next / previous tab |
+| `Ctrl` `1`…`8` / `Ctrl` `9` | Jump to that tab / the last one |
 | `Ctrl` `R` / `F5` | Reload |
 | `Ctrl` `F` | Find in document |
 | `Ctrl` `\` | Toggle contents sidebar |
 | `Ctrl` `K` | Filter the sidebar |
-| `Alt` `←` / `→` | Back / forward |
+| `Alt` `←` / `→` | Back / forward within the tab |
 | `Alt` `↑` / `↓` | Previous / next file in the folder |
 | `Ctrl` `Shift` `T` | Cycle theme (auto, light, dark, sepia, high contrast) |
 | `Ctrl` `+` / `-` / `0` | Text size |
@@ -237,7 +242,7 @@ window updates the view without touching MDX.
 ```
 src/
   markdown/      parser, plugins, sanitiser, lazy library loading
-  app/           viewer, sidebar, find, menu, settings, IPC bridge, path helpers
+  app/           viewer, tabs, sidebar, find, menu, settings, IPC bridge, path helpers
   styles/        themes and rendered-document styling
 src-tauri/
   src/           file reading, link resolution, filesystem watching, PDF export
@@ -270,6 +275,8 @@ app hecha con Electron.
 - **Amplio soporte de Markdown** — CommonMark, extensiones estilo GitHub,
   notas al pie, matemáticas (KaTeX), diagramas (Mermaid), resaltado de
   sintaxis. Ver la [tabla completa](#what-it-renders) más arriba.
+- **Pestañas** — varios documentos abiertos a la vez, cada uno con su propio
+  historial de atrás/adelante; las pestañas abiertas se restauran al iniciar.
 - **Rápido por diseño** — un único proceso residente, librerías pesadas
   cargadas bajo demanda, renderizado progresivo.
 - **Exportar a HTML autónomo** con todo el estilo y contenido incrustado, o a

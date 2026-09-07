@@ -77,3 +77,9 @@ export function stripFileScheme(value: string): string {
     return value.slice(7);
   }
 }
+
+/** The final segment of a path, whichever separator it was written with. */
+export function baseName(path: string): string {
+  const lastSlash = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
+  return lastSlash < 0 ? path : path.slice(lastSlash + 1) || path;
+}

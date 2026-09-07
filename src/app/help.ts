@@ -5,12 +5,26 @@ export const HELP_DOCUMENT = `# Keyboard shortcuts
 
 | Shortcut | Action |
 | --- | --- |
-| \`Ctrl\` \`O\` | Open a file |
+| \`Ctrl\` \`O\` / \`Ctrl\` \`T\` | Open a file in a new tab |
 | \`Ctrl\` \`R\` / \`F5\` | Reload the current file |
-| \`Alt\` \`←\` / \`Alt\` \`→\` | Back / forward through visited files |
+| \`Alt\` \`←\` / \`Alt\` \`→\` | Back / forward within this tab |
 | \`Alt\` \`↑\` / \`Alt\` \`↓\` | Previous / next file in the same folder |
 | \`Ctrl\` \`Shift\` \`E\` | Export as standalone HTML |
 | \`Ctrl\` \`P\` | Print |
+
+## Tabs
+
+Every file opens in its own tab, and the strip under the toolbar is restored
+the next time MDX starts. Links followed inside a document stay in the tab they
+were opened from, so each tab keeps its own back and forward history.
+
+| Shortcut | Action |
+| --- | --- |
+| \`Ctrl\` \`W\` | Close the current tab |
+| \`Ctrl\` \`Tab\` / \`Ctrl\` \`Shift\` \`Tab\` | Next / previous tab |
+| \`Ctrl\` \`1\`…\`8\` | Jump to that tab |
+| \`Ctrl\` \`9\` | Jump to the last tab |
+| Middle click | Close a tab |
 
 ## Reading
 

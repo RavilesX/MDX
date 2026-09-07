@@ -18,6 +18,7 @@ import {
   resolveLink,
   setWindowTitle,
   stripFileScheme,
+  unwatchDocument,
   watchDocument,
   type DocumentPayload,
 } from "./bridge.js";
@@ -50,6 +51,8 @@ export class Viewer {
   /** Fired after a document renders, so the TOC and window chrome can update. */
   onDocument: ((doc: OpenDocument) => void) | null = null;
   onActiveHeading: ((slug: string) => void) | null = null;
+  /** Fired when the viewer goes back to the welcome screen. */
+  onCleared: (() => void) | null = null;
 
   constructor(
     private readonly el: ViewerElements,
@@ -154,6 +157,26 @@ export class Viewer {
       payload: { path: "", name: title, dir: "", content: source, size: 0, modified: null, lossy: false },
       render,
     });
+  }
+
+  /** Back to the welcome screen — the last tab was closed. */
+  clear(): void {
+    this.token = newGeneration();
+    resetLazyWork();
+    this.headingObserver?.disconnect();
+    this.current = null;
+
+    this.el.content.replaceChildren();
+    this.el.content.hidden = true;
+    this.el.welcome.hidden = false;
+    this.el.root.dataset.hasDocument = "false";
+    this.el.title.textContent = "No document";
+    this.el.title.title = "";
+    this.el.stats.textContent = "";
+    this.el.progress.style.transform = "scaleX(0)";
+    void setWindowTitle("MDX");
+    void unwatchDocument();
+    this.onCleared?.();
   }
 
   async reload(): Promise<void> {

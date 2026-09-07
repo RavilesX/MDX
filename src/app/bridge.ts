@@ -66,6 +66,15 @@ export async function watchDocument(path: string): Promise<void> {
   }
 }
 
+export async function unwatchDocument(): Promise<void> {
+  if (!IN_TAURI) return;
+  try {
+    await invoke("unwatch_document");
+  } catch {
+    // Nothing was being watched; nothing to stop.
+  }
+}
+
 export async function startupDocument(): Promise<string | null> {
   if (!IN_TAURI) return null;
   try {
@@ -244,4 +253,4 @@ export async function checkForUpdate(): Promise<UpdateCheck> {
   };
 }
 
-export { isAbsolutePath, joinPath, dirName, stripFileScheme } from "./paths.js";
+export { isAbsolutePath, joinPath, dirName, baseName, stripFileScheme } from "./paths.js";

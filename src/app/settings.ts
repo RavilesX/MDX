@@ -19,6 +19,11 @@ export interface Settings {
   allowRemoteImages: boolean;
 }
 
+export interface SessionTab {
+  path: string;
+  name: string;
+}
+
 export interface RecentFile {
   path: string;
   name: string;
@@ -27,7 +32,9 @@ export interface RecentFile {
 
 const SETTINGS_KEY = "mdx.settings.v1";
 const RECENTS_KEY = "mdx.recents.v1";
+const TABS_KEY = "mdx.tabs.v1";
 const MAX_RECENTS = 12;
+const MAX_TABS = 30;
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: "auto",
@@ -95,6 +102,22 @@ export function forgetRecent(path: string): RecentFile[] {
   const next = loadRecents().filter((r) => r.path !== path);
   write(RECENTS_KEY, next);
   return next;
+}
+
+/**
+ * The tabs that were open when the app last closed, so a session survives a
+ * restart. Only the co-ordinates are stored; the documents are read from disk
+ * again when a tab is activated.
+ */
+export function loadOpenTabs(): SessionTab[] {
+  const list = read<SessionTab[]>(TABS_KEY, []);
+  return Array.isArray(list)
+    ? list.filter((t) => t && typeof t.path === "string" && t.path).slice(0, MAX_TABS)
+    : [];
+}
+
+export function saveOpenTabs(tabs: SessionTab[]): void {
+  write(TABS_KEY, tabs.slice(0, MAX_TABS));
 }
 
 /** Remembered scroll position, so reopening a long document lands where you left it. */

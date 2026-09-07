@@ -603,6 +603,7 @@ mark.find-hit.current {
 
 @media print {
   .toolbar,
+  .tabs,
   .sidebar,
   .find-bar,
   .menu,
@@ -650,4 +651,90 @@ mark.find-hit.current {
     font-size: 0.8em;
     color: #555;
   }
+}
+
+/* ---------------------------------------------------------------- tabs */
+
+.tabs {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  gap: 2px;
+  padding: 4px 6px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: var(--bg-elev);
+  border-bottom: 1px solid var(--border-soft);
+  scrollbar-width: none;
+  user-select: none;
+}
+
+.tabs::-webkit-scrollbar {
+  height: 0;
+}
+
+/* With the strip up, the toolbar title is the same name twice. */
+html[data-tabs="on"] .tb-title {
+  display: none;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 1 auto;
+  min-width: 96px;
+  max-width: 200px;
+  padding: 5px 6px 5px 10px;
+  font-size: 0.8rem;
+  color: var(--fg-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 7px 7px 0 0;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.tab:hover {
+  color: var(--fg);
+  background: var(--bg-sunken);
+}
+
+.tab[aria-selected="true"] {
+  color: var(--fg);
+  background: var(--bg);
+  border-color: var(--border-soft);
+  font-weight: 600;
+}
+
+.tab-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-close {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  font-size: 0.7rem;
+  line-height: 1;
+  color: var(--fg-faint);
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.12s ease, background 0.12s ease;
+}
+
+.tab:hover .tab-close,
+.tab[aria-selected="true"] .tab-close {
+  opacity: 1;
+}
+
+.tab-close:hover {
+  color: var(--fg);
+  background: var(--border);
 }
