@@ -8,7 +8,7 @@
 
 Not an editor — it opens a file, renders it well, and stays out of the way.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-informational)
 ![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%202-24C8DB?logo=tauri&logoColor=white)
@@ -80,7 +80,7 @@ under **⋮ → Feature showcase**.
 
 ## Why it feels fast
 
-Four decisions carry most of the weight:
+Five decisions carry most of the weight:
 
 **One resident process.** A single-instance lock means the second
 `mdx file.md` hands the path to the window that is already open. The webview
@@ -98,6 +98,13 @@ the full one fetched only for something outside it.
 **Progressive rendering.** Text and headings paint first. Diagrams, formulae
 and highlighting are upgraded afterwards, nearest-to-viewport first, so a long
 document is readable before it is finished.
+
+**Tabs hold co-ordinates, not documents.** A background tab keeps only its
+path, name and history — no parked DOM, no retained render. The viewer renders
+one document at a time and is re-pointed when the active tab changes, so twenty
+open tabs cost what one costs, and coming back to a tab shows what is on disk
+now rather than a stale snapshot. The scroll position is remembered per file,
+so the document still opens where it was left.
 
 **Sanitised HTML.** Markdown from elsewhere can carry `<script>` or
 `<img onerror=…>`. Everything passes through DOMPurify before it reaches the
