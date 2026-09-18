@@ -506,6 +506,13 @@
   height: auto;
 }
 
+/* With htmlLabels off, Mermaid's newer node shapes (mindmap, etc.) place SVG
+   labels at x=0 on the node centre but never set text-anchor, so text starts
+   mid-node and spills out. Flowchart already centres its own labels. */
+.mermaid-block .node .label text {
+  text-anchor: middle;
+}
+
 .mermaid-error {
   margin: 0;
   overflow-x: auto;
