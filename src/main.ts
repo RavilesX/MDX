@@ -149,7 +149,9 @@ async function loadTab(tab: Tab): Promise<void> {
 async function openPath(path: string, options: { newTab?: boolean } = {}): Promise<void> {
   const existing = tabs.findByPath(path);
   if (existing) {
-    if (tabs.active?.id === existing.id) return;
+    // A restored session marks its first tab active without loading it, so
+    // "already active" alone does not mean the document is on screen.
+    if (tabs.active?.id === existing.id && viewer.document?.payload.path === path) return;
     tabs.setActive(existing.id);
     await loadTab(existing);
     return;
