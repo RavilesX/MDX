@@ -27,6 +27,7 @@ import { HELP_DOCUMENT } from "./app/help.js";
 import { Menu, type MenuItem } from "./app/menu.js";
 import {
   DEFAULT_SETTINGS,
+  FONT_SCALES,
   forgetRecent,
   loadOpenTabs,
   loadRecents,
@@ -35,6 +36,7 @@ import {
   saveSettings,
   THEMES,
   WIDTHS,
+  ZOOM_LEVELS,
   type Settings,
   type Theme,
   type Width,
@@ -248,11 +250,39 @@ function cycleTheme(): void {
   toast(`Theme: ${next}`);
 }
 
-function scaleFont(delta: number): void {
-  const next = Math.min(2.2, Math.max(0.7, Number((settings.fontScale + delta).toFixed(2))));
-  updateSettings({ fontScale: next });
-  toast(`Text size ${Math.round(next * 100)}%`);
+const percent = (value: number): string => `${Math.round(value * 100)}%`;
+
+function setZoom(zoom: number): void {
+  if (zoom === settings.zoom) return;
+  viewer.keepingScroll(() => updateSettings({ zoom }));
+  toast(`Zoom ${percent(zoom)}`);
 }
+
+/** Moves to the next zoom level in `direction`, from wherever zoom is now. */
+function stepZoom(direction: 1 | -1): void {
+  const current = settings.zoom;
+  const next =
+    direction > 0
+      ? ZOOM_LEVELS.find((level) => level > current + 0.001)
+      : [...ZOOM_LEVELS].reverse().find((level) => level < current - 0.001);
+  if (next !== undefined) setZoom(next);
+}
+
+// Ctrl+wheel zooms, as in a browser. Touchpads send many small deltas per
+// gesture, so they are summed until they amount to about one wheel notch.
+let wheelZoom = 0;
+document.addEventListener(
+  "wheel",
+  (event) => {
+    if (!(event.ctrlKey || event.metaKey)) return;
+    event.preventDefault();
+    wheelZoom += event.deltaMode === WheelEvent.DOM_DELTA_PIXEL ? event.deltaY : event.deltaY * 40;
+    if (Math.abs(wheelZoom) < 40) return;
+    stepZoom(wheelZoom < 0 ? 1 : -1);
+    wheelZoom = 0;
+  },
+  { passive: false },
+);
 
 /* ------------------------------------------------------------------ export */
 
@@ -336,6 +366,25 @@ const menu = new Menu(el.menu, need("btn-menu"), (): MenuItem[] => {
       run: (value) => updateSettings({ width: value as Width }),
     },
     {
+      kind: "stepper",
+      label: "Zoom",
+      value: percent(settings.zoom),
+      resetTitle: "Reset zoom (Ctrl 0)",
+      decrement: () => stepZoom(-1),
+      increment: () => stepZoom(1),
+      reset: () => setZoom(1),
+    },
+    {
+      kind: "choice",
+      label: "Text size",
+      value: String(settings.fontScale),
+      // A size saved by an older version may sit between the steps; keep it listed.
+      options: [...new Set([...FONT_SCALES, settings.fontScale])]
+        .sort((a, b) => a - b)
+        .map((scale) => ({ value: String(scale), label: percent(scale) })),
+      run: (value) => updateSettings({ fontScale: Number(value) }),
+    },
+    {
       kind: "choice",
       label: "Typeface",
       value: settings.typeface,
@@ -373,6 +422,7 @@ const menu = new Menu(el.menu, need("btn-menu"), (): MenuItem[] => {
           width: DEFAULT_SETTINGS.width,
           typeface: DEFAULT_SETTINGS.typeface,
           fontScale: DEFAULT_SETTINGS.fontScale,
+          zoom: DEFAULT_SETTINGS.zoom,
           justify: DEFAULT_SETTINGS.justify,
         }),
     },
@@ -481,13 +531,13 @@ document.addEventListener("keydown", (event) => {
     toc.focusFilter();
   } else if (mod && (event.key === "=" || event.key === "+")) {
     event.preventDefault();
-    scaleFont(0.1);
+    stepZoom(1);
   } else if (mod && event.key === "-") {
     event.preventDefault();
-    scaleFont(-0.1);
+    stepZoom(-1);
   } else if (mod && event.key === "0") {
     event.preventDefault();
-    updateSettings({ fontScale: 1 });
+    setZoom(1);
   } else if (event.altKey && event.key === "ArrowLeft") {
     event.preventDefault();
     void goHistory(-1);

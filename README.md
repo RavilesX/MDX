@@ -232,7 +232,7 @@ same checks as CI first, and attaches everything to the draft release.
 | `Alt` `←` / `→` | Back / forward within the tab |
 | `Alt` `↑` / `↓` | Previous / next file in the folder |
 | `Ctrl` `Shift` `T` | Cycle theme (auto, light, dark, sepia, high contrast) |
-| `Ctrl` `+` / `-` / `0` | Text size |
+| `Ctrl` `+` / `-` / `0`, `Ctrl` + wheel | Zoom (text size lives in the menu) |
 | `Ctrl` `Shift` `E` | Export standalone HTML |
 | `Ctrl` `P` | Print |
 | `F11` | Fullscreen |

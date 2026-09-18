@@ -21,6 +21,7 @@ export function applyTheme(settings: Settings): void {
   root.classList.toggle("dark", isDarkTheme(settings.theme));
   root.classList.toggle("justify", settings.justify);
   root.style.setProperty("--font-scale", String(settings.fontScale));
+  root.style.setProperty("--zoom", String(settings.zoom));
 }
 
 /** Follow the desktop's light/dark switch while the theme is set to auto. */

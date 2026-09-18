@@ -4,6 +4,7 @@ export type MenuItem =
   | { kind: "action"; label: string; hint?: string; disabled?: boolean; run: () => void }
   | { kind: "toggle"; label: string; hint?: string; checked: boolean; run: () => void }
   | { kind: "choice"; label: string; options: Array<{ value: string; label: string }>; value: string; run: (value: string) => void }
+  | { kind: "stepper"; label: string; value: string; resetTitle: string; decrement: () => void; increment: () => void; reset: () => void }
   | { kind: "separator"; label?: string };
 
 export class Menu {
@@ -84,6 +85,32 @@ export class Menu {
           this.refresh();
         });
         row.appendChild(select);
+        this.root.appendChild(row);
+        continue;
+      }
+
+      if (item.kind === "stepper") {
+        const row = document.createElement("div");
+        row.className = "menu-row";
+        row.textContent = item.label;
+
+        const group = document.createElement("div");
+        group.className = "menu-stepper";
+        const step = (text: string, title: string, run: () => void): HTMLButtonElement => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = text;
+          button.title = title;
+          button.addEventListener("click", () => {
+            run();
+            this.refresh();
+          });
+          return button;
+        };
+        const value = step(item.value, item.resetTitle, item.reset);
+        value.className = "menu-stepper-value";
+        group.append(step("−", `${item.label} out`, item.decrement), value, step("+", `${item.label} in`, item.increment));
+        row.appendChild(group);
         this.root.appendChild(row);
         continue;
       }

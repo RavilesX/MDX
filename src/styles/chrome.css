@@ -431,6 +431,31 @@ mark.find-hit.current {
   border-radius: 6px;
 }
 
+.menu-stepper {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.menu-stepper button {
+  min-width: 26px;
+  padding: 2px 6px;
+  font-size: 0.85rem;
+}
+
+.menu-stepper button:hover {
+  background: var(--accent-soft);
+}
+
+.menu-stepper .menu-stepper-value {
+  min-width: 3.4rem;
+  font-variant-numeric: tabular-nums;
+  border-inline: 1px solid var(--border);
+}
+
 /* --------------------------------------------------------------- toast */
 
 .toast {
@@ -629,6 +654,8 @@ mark.find-hit.current {
   .markdown-body {
     max-width: none;
     padding: 0;
+    zoom: 1;
+    --column-max: 100000px;
   }
 
   /* Keep blocks that carry meaning together on one page. */

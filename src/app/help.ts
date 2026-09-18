@@ -42,8 +42,9 @@ were opened from, so each tab keeps its own back and forward history.
 | Shortcut | Action |
 | --- | --- |
 | \`Ctrl\` \`Shift\` \`T\` | Cycle theme |
-| \`Ctrl\` \`+\` / \`Ctrl\` \`-\` | Larger / smaller text |
-| \`Ctrl\` \`0\` | Reset text size |
+| \`Ctrl\` \`+\` / \`Ctrl\` \`-\` | Zoom in / out |
+| \`Ctrl\` + mouse wheel | Zoom in / out |
+| \`Ctrl\` \`0\` | Reset zoom |
 | \`F11\` | Fullscreen |
 | \`?\` | This page |
 

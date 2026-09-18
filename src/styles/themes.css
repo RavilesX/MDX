@@ -41,6 +41,7 @@
   --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", ui-monospace, "SFMono-Regular",
     "Liberation Mono", monospace;
   --font-scale: 1;
+  --zoom: 1;
 }
 
 /* `auto` defers to the desktop, but only while no explicit theme is chosen. */

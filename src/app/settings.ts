@@ -13,6 +13,8 @@ export interface Settings {
   width: Width;
   typeface: Typeface;
   fontScale: number;
+  /** Document zoom: scales the rendered page, diagrams and images included. */
+  zoom: number;
   sidebarOpen: boolean;
   showFrontMatter: boolean;
   justify: boolean;
@@ -41,6 +43,7 @@ export const DEFAULT_SETTINGS: Settings = {
   width: "normal",
   typeface: "sans",
   fontScale: 1,
+  zoom: 1,
   sidebarOpen: false,
   showFrontMatter: true,
   justify: false,
@@ -49,6 +52,10 @@ export const DEFAULT_SETTINGS: Settings = {
 
 export const THEMES: Theme[] = ["auto", "light", "dark", "sepia", "high-contrast"];
 export const WIDTHS: Width[] = ["narrow", "normal", "wide", "full"];
+
+/** The steps zoom moves through, as in a browser. */
+export const ZOOM_LEVELS = [0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
+export const FONT_SCALES = [0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2];
 
 function read<T>(key: string, fallback: T): T {
   try {
@@ -75,6 +82,7 @@ export function loadSettings(): Settings {
   const merged = { ...DEFAULT_SETTINGS, ...stored };
   // Clamp anything a hand-edited value could have broken.
   merged.fontScale = Math.min(2.2, Math.max(0.7, Number(merged.fontScale) || 1));
+  merged.zoom = Math.min(3, Math.max(0.5, Number(merged.zoom) || 1));
   if (!THEMES.includes(merged.theme)) merged.theme = DEFAULT_SETTINGS.theme;
   if (!WIDTHS.includes(merged.width)) merged.width = DEFAULT_SETTINGS.width;
   return merged;

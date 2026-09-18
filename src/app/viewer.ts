@@ -72,6 +72,29 @@ export class Viewer {
     if (this.current && remoteImagesChanged) void this.reload();
   }
 
+  /**
+   * Runs a zoom change while keeping the reader on the same passage. The
+   * column reflows as it widens, so neither the raw offset nor a scroll ratio
+   * survives; instead the first block reaching into the viewport is pinned,
+   * at the same fraction of its height, to the top edge.
+   */
+  keepingScroll(change: () => void): void {
+    const scroller = this.scroller();
+    const edge = scroller.getBoundingClientRect().top;
+    const anchor = Array.from(this.el.content.children).find(
+      (child) => child.getBoundingClientRect().bottom > edge,
+    );
+    if (!anchor) {
+      change();
+      return;
+    }
+    const before = anchor.getBoundingClientRect();
+    const into = before.height ? (edge - before.top) / before.height : 0;
+    change();
+    const after = anchor.getBoundingClientRect();
+    scroller.scrollTop += after.top + into * after.height - edge;
+  }
+
   async open(path: string, options: { keepScroll?: boolean } = {}): Promise<void> {
     const previousRatio = options.keepScroll ? this.scrollRatio() : null;
     const payload = await readDocument(path);

@@ -1,7 +1,16 @@
 /* Rendered document styles. Everything under `.markdown-body`. */
 
+/* Zoom scales the whole page (text, diagrams, images) through CSS `zoom`, so
+   the column widens with it until the window stops it. `--column-max` is the
+   column's own limit, which diagrams below need to know. */
+:root { --column-max: 46rem; }
+:root[data-width="narrow"] { --column-max: 34rem; }
+:root[data-width="wide"] { --column-max: 62rem; }
+:root[data-width="full"] { --column-max: 100000px; }
+
 .markdown-body {
-  max-width: 46rem;
+  zoom: var(--zoom);
+  max-width: var(--column-max);
   margin: 0 auto;
   padding: 2.5rem 2rem 6rem;
   font-size: calc(1rem * var(--font-scale));
@@ -13,10 +22,6 @@
 .markdown-body[hidden] {
   display: none;
 }
-
-:root[data-width="narrow"] .markdown-body { max-width: 34rem; }
-:root[data-width="wide"] .markdown-body { max-width: 62rem; }
-:root[data-width="full"] .markdown-body { max-width: none; }
 
 :root[data-typeface="serif"] .markdown-body { font-family: var(--font-serif); }
 :root[data-typeface="mono"] .markdown-body { font-family: var(--font-mono); font-size: calc(0.94rem * var(--font-scale)); }
@@ -494,6 +499,7 @@
 
 .mermaid-block {
   margin: 0 0 1.4em;
+  overflow-x: auto;
   padding: 1em;
   text-align: center;
   background: var(--bg-elev);
@@ -502,7 +508,12 @@
 }
 
 .mermaid-block svg {
-  max-width: 100%;
+  /* Once the window stops the column from widening, a diagram that already
+     fills it would stay put however far you zoom. Sizing it from its zoom-1
+     width instead lets it keep growing; the block scrolls sideways. `--frame`
+     is what sits around the diagram: column and block padding plus border. */
+  --frame: calc(4rem + 2em + 2px);
+  width: min((100% + var(--frame)) * var(--zoom) - var(--frame), var(--column-max) - var(--frame));
   height: auto;
 }
 
