@@ -506,10 +506,12 @@
   height: auto;
 }
 
-/* With htmlLabels off, Mermaid's newer node shapes (mindmap, etc.) place SVG
-   labels at x=0 on the node centre but never set text-anchor, so text starts
-   mid-node and spills out. Flowchart already centres its own labels. */
-.mermaid-block .node .label text {
+/* With htmlLabels off, Mermaid's newer node shapes (mindmap rounded, hexagon,
+   circle, …) put the label at x=0 on the node centre but never set
+   text-anchor, so text starts mid-node and spills out. Shapes that already
+   centre by shifting the label left (mindmap default, flowchart) must keep
+   their start anchor, hence matching only the unshifted labels. */
+.mermaid-block .node .label[transform^="translate(0,"] text {
   text-anchor: middle;
 }
 
