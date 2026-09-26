@@ -8,7 +8,7 @@
 
 Not an editor — it opens a file, renders it well, and stays out of the way.
 
-![Version](https://img.shields.io/badge/version-1.2.0-blue)
+![Version](https://img.shields.io/badge/version-1.2.1-blue)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-informational)
 ![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%202-24C8DB?logo=tauri&logoColor=white)
@@ -125,6 +125,11 @@ The headless-Chromium path needs Chromium, Google Chrome, Brave, or Edge —
 on Linux, found on `PATH`; on Windows, found in its usual install location or
 the registry (Edge ships with Windows, so this normally just works). Without
 one, use Print… instead.
+
+Paper cannot scroll, so both PDF paths wrap what scrolls sideways on screen:
+long code lines break onto the next line and wide tables wrap their cells to
+fit the page. Line numbers are left out of the PDF, since they cannot follow
+wrapped lines. `samples/print-wrap.md` is a quick way to check it.
 
 ## Building
 
@@ -260,7 +265,7 @@ scripts/         dependency and install helpers, .sh for Linux / .ps1 for Window
 packaging/       desktop entries (one for ~/.local, one .hbs template
                  the .deb bundler fills in) and the systemd user service
 .github/workflows/  CI: tests and bundle builds on Linux and Windows
-samples/         the feature showcase document
+samples/         the feature showcase document and a PDF wrap test
 ```
 
 The Rust side stays deliberately small: read a file, resolve a link, watch for
@@ -288,7 +293,8 @@ app hecha con Electron.
   cargadas bajo demanda, renderizado progresivo.
 - **Exportar a HTML autónomo** con todo el estilo y contenido incrustado, o a
   **PDF** (con hipervínculos funcionales) vía un Chromium del sistema en modo
-  headless, o **imprimir** con el diálogo nativo.
+  headless, o **imprimir** con el diálogo nativo. En el PDF, el código largo
+  y las tablas anchas se ajustan al ancho de la página en vez de cortarse.
 - **Saneado por defecto** — DOMPurify más una CSP estricta en el webview; las
   imágenes remotas son opt-in.
 - **Recarga automática** al detectar cambios en disco, tabla de contenidos,
