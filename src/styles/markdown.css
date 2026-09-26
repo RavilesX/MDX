@@ -547,3 +547,31 @@
 .mermaid-source {
   display: none;
 }
+
+/* Paper cannot scroll: anything that overflows sideways on screen wraps
+   instead, or it is cut off at the page edge. Kept here, after the rules it
+   overrides, so it wins on source order. */
+@media print {
+  .code-scroll,
+  .table-scroll,
+  .front-matter-raw {
+    overflow: visible;
+  }
+
+  .code-block code,
+  .front-matter-raw {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  /* Line numbers live in a separate column and cannot follow wrapped lines,
+     so they would point at the wrong code. */
+  .code-gutter {
+    display: none;
+  }
+
+  .markdown-body th,
+  .markdown-body td {
+    overflow-wrap: anywhere;
+  }
+}
