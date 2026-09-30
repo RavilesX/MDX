@@ -8,7 +8,7 @@
 
 Not an editor — it opens a file, renders it well, and stays out of the way.
 
-![Version](https://img.shields.io/badge/version-1.2.1-blue)
+![Version](https://img.shields.io/badge/version-1.2.2-blue)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-informational)
 ![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%202-24C8DB?logo=tauri&logoColor=white)
@@ -59,6 +59,8 @@ No binaries for your platform yet, or want the latest from `main`? See
   plus a way to keep a warm instance from login on both.
 - **About panel** with an on-demand update check against this repo's GitHub
   releases — nothing runs on its own, only when asked.
+- **Quick source edits** — select anything on the page and press `Ctrl+E` to
+  edit (or delete) the raw Markdown behind it; Save writes it back to the file.
 
 ## What it renders
 
@@ -300,6 +302,9 @@ app hecha con Electron.
 - **Recarga automática** al detectar cambios en disco, tabla de contenidos,
   buscar en el documento, cuatro anchos, cinco temas (automático, claro,
   oscuro, sepia, alto contraste).
+- **Edición rápida del fuente** — selecciona cualquier parte de la página y
+  presiona `Ctrl+E` para editar (o borrar) el Markdown crudo; Guardar lo
+  escribe de vuelta al archivo.
 
 ### Descargar e instalar
 
