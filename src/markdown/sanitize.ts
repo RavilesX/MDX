@@ -22,6 +22,7 @@ const ALLOWED_DATA_ATTRS = [
   "data-static",
   "data-line",
   "data-footnote-ref",
+  "data-source-lines",
 ];
 
 let configured = false;

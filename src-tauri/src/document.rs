@@ -234,6 +234,18 @@ pub fn list_siblings(path: String) -> Result<Vec<String>, String> {
     Ok(files.iter().map(|p| to_string(p)).collect())
 }
 
+/// Overwrite an open document with Markdown edited through the Ctrl+E editor.
+/// Only an existing Markdown file is writable, so the webview cannot use this
+/// to create files or clobber anything else on disk.
+#[tauri::command]
+pub fn write_document(path: String, content: String) -> Result<(), String> {
+    let resolved = canonical(&path).map_err(|e| format!("{}: {}", path, e))?;
+    if !resolved.is_file() || !is_markdown_path(&resolved.to_string_lossy()) {
+        return Err(format!("{} is not an editable Markdown file", resolved.display()));
+    }
+    fs::write(&resolved, content).map_err(|e| e.to_string())
+}
+
 pub fn is_markdown_path(path: &str) -> bool {
     Path::new(path)
         .extension()

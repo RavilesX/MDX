@@ -96,7 +96,7 @@ test("wiki links and embeds record their target", () => {
 
 test("tables are wrapped so they scroll instead of the page", () => {
   const result = renderMarkdown("| a | b |\n| - | - |\n| 1 | 2 |\n");
-  assert.ok(result.html.includes('<div class="table-scroll"><table>'));
+  assert.ok(/<div[^>]* class="table-scroll"><table>/.test(result.html));
   assert.ok(/<\/table>\s*<\/div>/.test(result.html));
 });
 
@@ -112,7 +112,7 @@ test("admonitions and GitHub alerts both render", () => {
 test("dangerous HTML is preserved for the sanitiser, never executed at parse time", () => {
   const result = renderMarkdown('<script>alert(1)</script>\n\n<img src=x onerror=alert(1)>\n');
   // The parser passes raw HTML through by design; sanitize.ts is the gate.
-  assert.ok(result.html.includes("<script>"), "html:true should let the sanitiser see it");
+  assert.ok(result.html.includes("<script"), "html:true should let the sanitiser see it");
 });
 
 test("statistics reflect the source", () => {
@@ -126,7 +126,7 @@ test("the showcase document renders every major feature", () => {
   const expectations: Array<[string, string]> = [
     ["footnotes", "footnote-ref"],
     ["task lists", "task-list-item"],
-    ["definition lists", "<dl>"],
+    ["definition lists", "<dl"],
     ["abbreviations", "<abbr"],
     ["marked text", "<mark>"],
     ["inserted text", "<ins>"],
@@ -148,4 +148,12 @@ test("the showcase document renders every major feature", () => {
 
   assert.ok(result.frontMatter?.title === "MDX feature showcase");
   assert.ok(result.headings.length > 8, "showcase should produce a full outline");
+});
+
+test("top-level blocks carry their source lines", () => {
+  const { html } = renderMarkdown("# Title\n\nPara one\nstill one\n\n```js\nx\n```\n\n| a |\n| - |\n| 1 |\n");
+  assert.match(html, /<h1 data-source-lines="0-1"/);
+  assert.match(html, /<p data-source-lines="2-4"/);
+  assert.match(html, /<figure data-source-lines="5-8"/);
+  assert.match(html, /<div data-source-lines="9-12" class="table-scroll"/);
 });

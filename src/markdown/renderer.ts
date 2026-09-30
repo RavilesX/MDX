@@ -153,6 +153,31 @@ function createInstance(): MarkdownIt {
     return `${inner}</div>`;
   };
 
+  // Each top-level block is rendered on its own and its first tag stamped
+  // with the source lines it came from (`start-end`, 0-based, end exclusive),
+  // so a selection on screen maps back to raw Markdown for the Ctrl+E editor.
+  // Stamping the output rather than token attrs also covers the fence and
+  // math renderers, which build their HTML by hand and ignore attrs.
+  const renderAll = md.renderer.render.bind(md.renderer);
+  md.renderer.render = (tokens, options, env) => {
+    let out = "";
+    for (let i = 0; i < tokens.length; i++) {
+      const first = tokens[i];
+      let end = i;
+      if (first.nesting === 1) {
+        do end++;
+        while (end < tokens.length && !(tokens[end].level === first.level && tokens[end].nesting === -1));
+      }
+      const html = renderAll(tokens.slice(i, end + 1), options, env);
+      const map = first.map;
+      out += map
+        ? html.replace(/^<[a-z][\w-]*/i, (tag) => `${tag} data-source-lines="${map[0]}-${map[1]}"`)
+        : html;
+      i = end;
+    }
+    return out;
+  };
+
   return md;
 }
 

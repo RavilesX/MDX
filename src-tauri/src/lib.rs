@@ -122,6 +122,7 @@ pub fn run() {
             document::read_document,
             document::resolve_link,
             document::list_siblings,
+            document::write_document,
             media::read_file_as_data_url,
             pdf::export_pdf,
             watcher::watch_document,

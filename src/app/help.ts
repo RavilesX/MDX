@@ -9,6 +9,7 @@ export const HELP_DOCUMENT = `# Keyboard shortcuts
 | \`Ctrl\` \`R\` / \`F5\` | Reload the current file |
 | \`Alt\` \`←\` / \`Alt\` \`→\` | Back / forward within this tab |
 | \`Alt\` \`↑\` / \`Alt\` \`↓\` | Previous / next file in the same folder |
+| \`Ctrl\` \`E\` | Edit the Markdown source of the selection |
 | \`Ctrl\` \`Shift\` \`E\` | Export as standalone HTML |
 | \`Ctrl\` \`P\` | Print |
 

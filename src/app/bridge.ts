@@ -38,6 +38,11 @@ export async function readDocument(path: string): Promise<DocumentPayload> {
   return invoke<DocumentPayload>("read_document", { path });
 }
 
+export async function writeDocument(path: string, content: string): Promise<void> {
+  if (!IN_TAURI) throw new Error("File access needs the desktop app");
+  await invoke("write_document", { path, content });
+}
+
 export async function resolveLink(baseDir: string, target: string): Promise<string | null> {
   if (!IN_TAURI) return null;
   try {

@@ -14,13 +14,16 @@ import {
   onFilesDropped,
   openExternal,
   pickFile,
+  readDocument,
   revealInFileManager,
   saveTextFile,
   signalReady,
   startupDocument,
   toggleFullscreen,
+  writeDocument,
 } from "./app/bridge.js";
 import { AboutPanel } from "./app/about.js";
+import { SourceEditor, sliceLines, spanForRange, spliceLines } from "./app/editor.js";
 import { exportStandaloneHtml } from "./app/export.js";
 import { FindBar } from "./app/find.js";
 import { HELP_DOCUMENT } from "./app/help.js";
@@ -103,6 +106,13 @@ const about = new AboutPanel(
   need("about-status"),
   need("about-close"),
   { repo: need("about-repo"), issues: need("about-issues"), license: need("about-license") },
+);
+
+const editor = new SourceEditor(
+  need("editor"),
+  need<HTMLTextAreaElement>("editor-text"),
+  need<HTMLButtonElement>("editor-save"),
+  need("editor-cancel"),
 );
 
 /* ------------------------------------------------------------------ toast */
@@ -483,9 +493,54 @@ function renderRecents(): void {
   }
 }
 
+/* ------------------------------------------------------------ source edit */
+
+// Clicking an image or diagram leaves no text selection behind, so the last
+// thing clicked stands in for one.
+let lastClicked: Node | null = null;
+el.content.addEventListener("mousedown", (event) => (lastClicked = event.target as Node));
+
+function editSelection(): void {
+  const doc = viewer.document;
+  if (!doc?.payload.path) {
+    toast("Only files on disk can be edited");
+    return;
+  }
+  if (doc.payload.lossy) {
+    toast("This file is not valid UTF-8; saving would corrupt it");
+    return;
+  }
+
+  const selection = window.getSelection();
+  let range: Range | null = null;
+  if (selection?.rangeCount && !selection.isCollapsed) {
+    range = selection.getRangeAt(0);
+  } else if (lastClicked && el.content.contains(lastClicked)) {
+    range = document.createRange();
+    range.selectNode(lastClicked);
+  }
+  const span = range && spanForRange(el.content, range);
+  if (!span) {
+    toast("Select something in the document first");
+    return;
+  }
+
+  const { path, content } = doc.payload;
+  editor.open(sliceLines(content, span), async (text) => {
+    // Line numbers are only valid against the text they were taken from.
+    const onDisk = await readDocument(path);
+    if (onDisk.content !== content) throw new Error("The file changed on disk; reload before editing");
+    await writeDocument(path, spliceLines(content, span, text));
+    await viewer.reload();
+    toast("Saved");
+  });
+}
+
 /* ---------------------------------------------------------------- shortcuts */
 
 document.addEventListener("keydown", (event) => {
+  // The editor owns the keyboard while it is open.
+  if (editor.isOpen) return;
   const mod = event.ctrlKey || event.metaKey;
   const typing =
     event.target instanceof HTMLElement &&
@@ -519,6 +574,9 @@ document.addEventListener("keydown", (event) => {
   } else if (mod && event.shiftKey && event.key.toLowerCase() === "e") {
     event.preventDefault();
     void exportHtml();
+  } else if (mod && event.key.toLowerCase() === "e") {
+    event.preventDefault();
+    editSelection();
   } else if (mod && event.shiftKey && event.key.toLowerCase() === "t") {
     event.preventDefault();
     cycleTheme();
