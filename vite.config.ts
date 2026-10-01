@@ -18,6 +18,8 @@ export default defineConfig({
     minify: !process.env.TAURI_DEBUG ? "esbuild" : false,
     sourcemap: !!process.env.TAURI_DEBUG,
     chunkSizeWarningLimit: 4096,
+    // The Ctrl+E editor is a second window with its own page.
+    rollupOptions: { input: { main: "index.html", editor: "editor.html" } },
     // No manualChunks: the dynamic imports in src/markdown/lazy.ts already
     // give Rollup the split points, and letting it decide keeps the shared
     // highlight.js language modules out of the eagerly loaded bundle.

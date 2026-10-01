@@ -40,57 +40,90 @@ export function spliceLines(source: string, span: SourceSpan, replacement: strin
   return lines.join(eol);
 }
 
+export interface EditorElements {
+  textarea: HTMLTextAreaElement;
+  cancel: HTMLButtonElement;
+  save: HTMLButtonElement;
+  /** "Save & Close" while there are unsaved changes, "Close" otherwise. */
+  done: HTMLButtonElement;
+}
+
+export interface EditorActions {
+  /** Writes the text to disk; rejecting keeps the editor open, so nothing typed is lost. */
+  persist: (text: string) => Promise<void>;
+  confirmDiscard: () => Promise<boolean>;
+  report: (message: string) => void;
+  close: () => void;
+}
+
+/** The buttons and dirty tracking of the editor window (editor.html). */
 export class SourceEditor {
-  private onSave: ((text: string) => Promise<void>) | null = null;
+  /** The text as last loaded or saved; anything else in the textarea is unsaved. */
+  private saved: string;
+  private saving = false;
 
   constructor(
-    private readonly root: HTMLElement,
-    private readonly textarea: HTMLTextAreaElement,
-    private readonly saveButton: HTMLButtonElement,
-    cancelButton: HTMLElement,
+    private readonly el: EditorElements,
+    text: string,
+    private readonly actions: EditorActions,
   ) {
-    cancelButton.addEventListener("click", () => this.close());
-    this.saveButton.addEventListener("click", () => void this.save());
-    this.root.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") this.close();
-      else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+    this.saved = text;
+    el.textarea.value = text;
+    el.textarea.addEventListener("input", () => this.refresh());
+    el.cancel.addEventListener("click", () => void this.cancel());
+    el.save.addEventListener("click", () => void this.save());
+    el.done.addEventListener("click", () => void this.done());
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        void this.cancel();
+      } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
         void this.save();
       }
     });
+    this.refresh();
+    el.textarea.focus();
+    el.textarea.setSelectionRange(0, 0);
   }
 
-  get isOpen(): boolean {
-    return !this.root.hidden;
+  private get dirty(): boolean {
+    return this.el.textarea.value !== this.saved;
   }
 
-  /** `onSave` rejecting keeps the dialog open, so the edit is never lost to a failed write. */
-  open(text: string, onSave: (text: string) => Promise<void>): void {
-    this.onSave = onSave;
-    this.textarea.value = text;
-    this.saveButton.disabled = false;
-    this.root.hidden = false;
-    this.textarea.focus();
-    this.textarea.setSelectionRange(0, 0);
+  /** Cancel button, Esc and the window's own close button all land here. */
+  async cancel(): Promise<void> {
+    if (this.saving) return;
+    if (!this.dirty || (await this.actions.confirmDiscard())) this.actions.close();
   }
 
-  close(): void {
-    this.root.hidden = true;
-    this.onSave = null;
+  private refresh(): void {
+    this.el.save.disabled = this.saving || !this.dirty;
+    this.el.done.disabled = this.saving;
+    this.el.done.textContent = this.dirty ? "Save & Close" : "Close";
   }
 
-  private async save(): Promise<void> {
-    if (!this.onSave || this.saveButton.disabled) return;
-    this.saveButton.disabled = true;
+  private async done(): Promise<void> {
+    if (!this.dirty || (await this.save())) this.actions.close();
+  }
+
+  /** True once the textarea's contents are on disk. */
+  private async save(): Promise<boolean> {
+    if (this.saving || !this.dirty) return !this.dirty;
+    const text = this.el.textarea.value;
+    this.saving = true;
+    this.refresh();
     try {
-      await this.onSave(this.textarea.value);
-      this.close();
+      await this.actions.persist(text);
+      this.saved = text;
+      return true;
     } catch (error) {
-      window.dispatchEvent(
-        new CustomEvent("mdx:toast", { detail: error instanceof Error ? error.message : String(error) }),
-      );
+      this.actions.report(error instanceof Error ? error.message : String(error));
+      return false;
     } finally {
-      this.saveButton.disabled = false;
+      this.saving = false;
+      this.refresh();
+      this.el.textarea.focus();
     }
   }
 }

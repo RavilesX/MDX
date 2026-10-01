@@ -3,7 +3,7 @@ import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { open as openDialog, save as saveDialog } from "@tauri-apps/plugin-dialog";
+import { confirm as confirmDialog, message as messageDialog, open as openDialog, save as saveDialog } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { openPath, openUrl } from "@tauri-apps/plugin-opener";
@@ -107,6 +107,17 @@ export async function pickFile(): Promise<string | null> {
     filters: [MARKDOWN_FILTER, { name: "All files", extensions: ["*"] }],
   });
   return typeof picked === "string" ? picked : null;
+}
+
+/** Native yes/no dialog; plain `window.confirm` outside the desktop app. */
+export async function confirmAction(message: string, okLabel: string): Promise<boolean> {
+  if (!IN_TAURI) return window.confirm(message);
+  return confirmDialog(message, { title: "MDX", kind: "warning", okLabel, cancelLabel: "Keep editing" });
+}
+
+export async function showError(message: string): Promise<void> {
+  if (!IN_TAURI) return window.alert(message);
+  await messageDialog(message, { title: "MDX", kind: "error" });
 }
 
 /** Local file → its bytes as a `data:` URI, for exports that must not depend on a path on disk. */

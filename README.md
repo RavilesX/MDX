@@ -6,9 +6,10 @@
 
 **A fast Markdown viewer for Linux and Windows.**
 
-Not an editor — it opens a file, renders it well, and stays out of the way.
+A viewer first — it opens a file, renders it well, and stays out of the way
+(with a small raw-source editor on `Ctrl+E` for quick fixes).
 
-![Version](https://img.shields.io/badge/version-1.2.2-blue)
+![Version](https://img.shields.io/badge/version-1.2.3-blue)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-informational)
 ![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%202-24C8DB?logo=tauri&logoColor=white)
@@ -60,7 +61,11 @@ No binaries for your platform yet, or want the latest from `main`? See
 - **About panel** with an on-demand update check against this repo's GitHub
   releases — nothing runs on its own, only when asked.
 - **Quick source edits** — select anything on the page and press `Ctrl+E` to
-  edit (or delete) the raw Markdown behind it; Save writes it back to the file.
+  edit (or delete) the raw Markdown behind it. The editor opens in its own
+  window, so it can be dragged anywhere — even off the viewer — while you read
+  the text behind it. **Save** writes to the file and keeps the editor open;
+  **Save & Close** (just **Close** when nothing changed) writes and exits;
+  **Cancel** asks before discarding unsaved changes.
 
 ## What it renders
 
@@ -256,7 +261,7 @@ window updates the view without touching MDX.
 ```
 src/
   markdown/      parser, plugins, sanitiser, lazy library loading
-  app/           viewer, tabs, sidebar, find, menu, settings, IPC bridge, path helpers
+  app/           viewer, tabs, sidebar, find, menu, settings, source editor, IPC bridge, path helpers
   styles/        themes and rendered-document styling
 src-tauri/
   src/           file reading, link resolution, filesystem watching, PDF export
@@ -278,7 +283,7 @@ Everything about rendering lives in the web layer.
 
 **Un visor de Markdown rápido para Linux y Windows.**
 
-No es un editor — abre un archivo, lo renderiza bien, y no estorba. Construido
+Primero un visor — abre un archivo, lo renderiza bien, y no estorba (con un pequeño editor del fuente en `Ctrl+E` para correcciones rápidas). Construido
 con [Tauri](https://tauri.app), así que usa el motor web propio del sistema
 (WebKitGTK en Linux, WebView2/Edge en Windows) en vez de cargar un navegador
 propio: el binario pesa unos pocos megabytes en lugar de los ~150 MB de una
@@ -303,8 +308,11 @@ app hecha con Electron.
   buscar en el documento, cuatro anchos, cinco temas (automático, claro,
   oscuro, sepia, alto contraste).
 - **Edición rápida del fuente** — selecciona cualquier parte de la página y
-  presiona `Ctrl+E` para editar (o borrar) el Markdown crudo; Guardar lo
-  escribe de vuelta al archivo.
+  presiona `Ctrl+E` para editar (o borrar) el Markdown crudo. El editor se
+  abre en su propia ventana, que puedes arrastrar a cualquier lado —incluso
+  fuera del visor— sin perder de vista el texto. **Save** guarda y deja el
+  editor abierto; **Save & Close** (solo **Close** si no hay cambios) guarda y
+  sale; **Cancel** pregunta antes de descartar cambios sin guardar.
 
 ### Descargar e instalar
 

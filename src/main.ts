@@ -23,7 +23,8 @@ import {
   writeDocument,
 } from "./app/bridge.js";
 import { AboutPanel } from "./app/about.js";
-import { SourceEditor, sliceLines, spanForRange, spliceLines } from "./app/editor.js";
+import { sliceLines, spanForRange, spliceLines } from "./app/editor.js";
+import { openEditorWindow } from "./app/editor-window.js";
 import { exportStandaloneHtml } from "./app/export.js";
 import { FindBar } from "./app/find.js";
 import { HELP_DOCUMENT } from "./app/help.js";
@@ -106,13 +107,6 @@ const about = new AboutPanel(
   need("about-status"),
   need("about-close"),
   { repo: need("about-repo"), issues: need("about-issues"), license: need("about-license") },
-);
-
-const editor = new SourceEditor(
-  need("editor"),
-  need<HTMLTextAreaElement>("editor-text"),
-  need<HTMLButtonElement>("editor-save"),
-  need("editor-cancel"),
 );
 
 /* ------------------------------------------------------------------ toast */
@@ -500,7 +494,7 @@ function renderRecents(): void {
 let lastClicked: Node | null = null;
 el.content.addEventListener("mousedown", (event) => (lastClicked = event.target as Node));
 
-function editSelection(): void {
+async function editSelection(): Promise<void> {
   const doc = viewer.document;
   if (!doc?.payload.path) {
     toast("Only files on disk can be edited");
@@ -525,22 +519,28 @@ function editSelection(): void {
     return;
   }
 
-  const { path, content } = doc.payload;
-  editor.open(sliceLines(content, span), async (text) => {
+  const { path, name } = doc.payload;
+  let { content } = doc.payload;
+  let lines = span;
+  const opened = await openEditorWindow(sliceLines(content, lines), name, async (text) => {
     // Line numbers are only valid against the text they were taken from.
     const onDisk = await readDocument(path);
     if (onDisk.content !== content) throw new Error("The file changed on disk; reload before editing");
-    await writeDocument(path, spliceLines(content, span, text));
+    const next = spliceLines(content, lines, text);
+    await writeDocument(path, next);
+    // The editor stays open after a plain Save, so the next save has to
+    // splice into what was just written.
+    content = next;
+    lines = { start: lines.start, end: lines.start + (text ? text.split(/\r?\n/).length : 0) };
     await viewer.reload();
     toast("Saved");
   });
+  if (!opened) toast("Finish the edit that is already open first");
 }
 
 /* ---------------------------------------------------------------- shortcuts */
 
 document.addEventListener("keydown", (event) => {
-  // The editor owns the keyboard while it is open.
-  if (editor.isOpen) return;
   const mod = event.ctrlKey || event.metaKey;
   const typing =
     event.target instanceof HTMLElement &&
@@ -576,7 +576,7 @@ document.addEventListener("keydown", (event) => {
     void exportHtml();
   } else if (mod && event.key.toLowerCase() === "e") {
     event.preventDefault();
-    editSelection();
+    void editSelection();
   } else if (mod && event.shiftKey && event.key.toLowerCase() === "t") {
     event.preventDefault();
     cycleTheme();

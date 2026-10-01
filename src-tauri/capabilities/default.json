@@ -1,8 +1,8 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Capabilities for the MDX viewer window.",
-  "windows": ["main"],
+  "description": "Capabilities for the MDX viewer window and its Ctrl+E editor window.",
+  "windows": ["main", "editor"],
   "permissions": [
     "core:default",
     "core:window:allow-show",
@@ -14,6 +14,8 @@
     "core:window:allow-set-fullscreen",
     "core:window:allow-is-fullscreen",
     "core:window:allow-close",
+    "core:window:allow-destroy",
+    "core:webview:allow-create-webview-window",
     "core:webview:allow-set-webview-zoom",
     "core:event:default",
     "cli:default",
