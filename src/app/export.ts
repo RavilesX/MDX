@@ -1,4 +1,5 @@
 import { IN_TAURI, readFileAsDataUrl } from "./bridge.js";
+import { pinShortColumns } from "./table-fit.js";
 
 /**
  * Standalone HTML export.
@@ -47,6 +48,8 @@ async function inlineLocalMedia(root: HTMLElement): Promise<void> {
 }
 
 export async function exportStandaloneHtml(content: HTMLElement, title: string): Promise<string> {
+  // Measured on the live document: a detached clone has no layout.
+  pinShortColumns(content);
   const clone = content.cloneNode(true) as HTMLElement;
 
   // Viewer-only affordances have no meaning in a static file.

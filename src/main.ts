@@ -26,6 +26,7 @@ import { AboutPanel } from "./app/about.js";
 import { sliceLines, spanForRange, spliceLines } from "./app/editor.js";
 import { openEditorWindow } from "./app/editor-window.js";
 import { exportStandaloneHtml } from "./app/export.js";
+import { pinShortColumns } from "./app/table-fit.js";
 import { FindBar } from "./app/find.js";
 import { HELP_DOCUMENT } from "./app/help.js";
 import { Menu, type MenuItem } from "./app/menu.js";
@@ -313,6 +314,9 @@ async function exportPdf(): Promise<void> {
     toast(error instanceof Error ? error.message : String(error));
   }
 }
+
+// The native print path (menu, toolbar, Ctrl P) never goes through an export.
+window.addEventListener("beforeprint", () => pinShortColumns(el.content));
 
 /* -------------------------------------------------------------------- menu */
 

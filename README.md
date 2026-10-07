@@ -135,8 +135,11 @@ one, use Print… instead.
 
 Paper cannot scroll, so both PDF paths wrap what scrolls sideways on screen:
 long code lines break onto the next line and wide tables wrap their cells to
-fit the page. Line numbers are left out of the PDF, since they cannot follow
-wrapped lines. `samples/print-wrap.md` is a quick way to check it.
+fit the page. Short columns (ids, one-word cells) keep their natural width, so
+only the text columns wrap, and tables print in slightly smaller type with
+tighter cells. Line numbers are left out of the PDF, since they cannot follow
+wrapped lines. `samples/print-wrap.md` and `samples/print-table.md` are a
+quick way to check it.
 
 ## Building
 
@@ -261,7 +264,7 @@ window updates the view without touching MDX.
 ```
 src/
   markdown/      parser, plugins, sanitiser, lazy library loading
-  app/           viewer, tabs, sidebar, find, menu, settings, source editor, IPC bridge, path helpers
+  app/           viewer, tabs, sidebar, find, menu, settings, source editor, print table fitting, IPC bridge, path helpers
   styles/        themes and rendered-document styling
 src-tauri/
   src/           file reading, link resolution, filesystem watching, PDF export
@@ -272,7 +275,7 @@ scripts/         dependency and install helpers, .sh for Linux / .ps1 for Window
 packaging/       desktop entries (one for ~/.local, one .hbs template
                  the .deb bundler fills in) and the systemd user service
 .github/workflows/  CI: tests and bundle builds on Linux and Windows
-samples/         the feature showcase document and a PDF wrap test
+samples/         the feature showcase document and two PDF wrap tests
 ```
 
 The Rust side stays deliberately small: read a file, resolve a link, watch for
@@ -301,7 +304,9 @@ app hecha con Electron.
 - **Exportar a HTML autónomo** con todo el estilo y contenido incrustado, o a
   **PDF** (con hipervínculos funcionales) vía un Chromium del sistema en modo
   headless, o **imprimir** con el diálogo nativo. En el PDF, el código largo
-  y las tablas anchas se ajustan al ancho de la página en vez de cortarse.
+  y las tablas anchas se ajustan al ancho de la página en vez de cortarse, y
+  las columnas cortas (ids, celdas de una palabra) conservan su ancho natural
+  para que solo las columnas de texto hagan salto de línea.
 - **Saneado por defecto** — DOMPurify más una CSP estricta en el webview; las
   imágenes remotas son opt-in.
 - **Recarga automática** al detectar cambios en disco, tabla de contenidos,
